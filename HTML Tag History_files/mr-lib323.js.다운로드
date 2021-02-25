@@ -1,0 +1,3486 @@
+/* support/js/mr-lib323.js - Martin Rinehart's library, version 3,
+Copyright 2011, Martin Rinehart */
+
+"use strict";
+
+/* Table of Contents
+ 186 I. Data
+ 188     A. MRlib323 - The global.
+ 191     B. MRlib323.COLOR -
+ 201     C. MRlib323.CURSOR -
+ 207     D. MRlib323.fader_data - Fader
+ 211     E. MRlib323.inits - Initial Values
+ 214     F. MRlib323.messages - Messages
+ 219     G. MRlib323.MILLIS_PER_FRAME - Morphing
+ 227     H. MRlib323.STYLES -
+ 247 II. Functions
+ 249     A. Animation Functions
+ 254         1. Dance (Morph Controller)
+ 256             a) MRlib323.dance() Perform a 'dance'.
+ 316         2. Morphs
+ 318             a) MRlib323.morph_background_color() Morph background color.
+ 346             b) MRlib323.morph_border_color() Morph border color.
+ 374             c) MRlib323.morph_border_radii() Morph horz & vert.
+ 402             d) MRlib323.morph_change_specs() Morph per 'change_specs'.
+ 428             e) MRlib323.morph_opacity() Morph from one opacity to another.
+ 441             f) MRlib323.morph_position() Morph position.
+ 460             g) MRlib323.morph_px_style() Morph a pixel-measured style.
+ 476             h) MRlib323.morph_size() Morph size.
+ 495             i) MRlib323.morph_size_loc() Morph size and location.
+ 520         3. Morph Support
+ 522             a) MRlib323.morph_from_change() 'change_spec' to 'morph_spec'.
+ 690             b) MRlib323.morph_steps() Convert 3, 9, 4 into [3, 5, 7, 9].
+ 710             c) MRlib323.morph_styles() Morph styles.
+ 745             d) MRlib323.spread_colors() Start/end colors to morph array.
+ 769     B. Array Functions
+ 771         1. MRlib323.array_copy() One-dimensional shallow copy.
+ 779         2. MRlib323.array_2d_copy() Two-dimensional shallow copy.
+ 787         3. MRlib323.array_count() Returns [0, 1, 2, ... 9] for count(10).
+ 795         4. MRlib323.array_delete() Delete array element.
+ 799         5. MRlib323.array_fill() Fill new array.
+ 807         6. MRlib323.array_index_of() Find index in array.
+ 818         7. MRlib323.array_indexes_of() Find indexes in array.
+ 830         8. MRlib323.array_pad() Pad array to length.
+ 838         9. MRlib323.array_shuffle() Return shuffled indices.
+ 857         10. MRlib323.array_starts_with() Array starts with other array.
+ 869         11. MRlib323.array_subscript() Array from array.
+ 886         12. MRlib323.array_2d_subscript() Array_2d from array_2d.
+ 898         13. MRlib323.flatten() Arrays to items within array.
+ 911         14. MRlib323.get_column() Get a column from a 2D array.
+ 921     C. Artists Effects Functions
+ 923         1. MRlib323.show_div() Flash: show briefly.
+ 930         2. MRlib323.glimmer() Glimmer: show dreamily.
+ 941         3. MRlib323.hover() Hover: show while over trigger.
+ 955         4. MRlib323.popup() Popup: show with close button(s).
+ 985         5. MRlib323.shake() Shake: move, move back.
+1000         6. MRlib323.swell() Swell: then unswell, an element.
+1015     D. Color Functions
+1017         1. MRlib323.color2rgb() '#rrggbb' (hex) to [r, g, b] (decimal).
+1026         2. MRlib323.hex_color_string() 'rgb(240,240,255)' to '#f0f0ff'.
+1055         3. MRlib323.rgb2color() [r, g, b] (decimal) to '#rrggbb' (hex).
+1069     E. Compare (Sort) Functions
+1071         1. MRlib323.compare_nocase() Compare case-insensitive.
+1084         2. MRlib323.compare_numbers() Compare numbers.
+1090         3. MRlib323.compare_numbers_and_strings() Compare mixed.
+1119         4. MRlib323.compare_reverse() Compare descending.
+1125     F. DOM-Related Functions
+1127         1. MRlib323.create_attached_element - Create/attach DOM elem.
+1139         2. MRlib323.create_element() Create a new DOM element.
+1160         3. MRlib323.detach_element() Includes kids, grandkids, etc.
+1173         4. MRlib323.detach_element_by_id()
+1182         5. MRlib323.edit_add_styles() Add styles to DOM element.
+1191         6. MRlib323.get_size() Get size of element.
+1200         7. MRlib323.fixup_event() Create arg & evt.target.
+1223         8. MRlib323.nodelist2array() Create an array given a NodeList.
+1232         9. MRlib323.number_from_style_px() 300 from '300px'.
+1248         10. MRlib323.say_center() Center text in element.
+1275         11. MRlib323.say_middle() Vertical center text in element.
+1303         12. MRlib323.style_an_element() Style given styles object(s).
+1336         13. MRlib323.style_elements() Style elements with one style set.
+1344     G. Other Functions
+1346         1. MRlib323.add_objects() Return all props in a new object.
+1357         2. MRlib323.copy_object() Shallow copy.
+1365         3. MRlib323.date2dd_Mon_yyyy() Format date as dd-Mon-yyyy.
+1382         4. MRlib323.div_points() Return dividing points.
+1400         5. MRlib323.fader() Display a message, briefly.
+1436         6. MRlib323.leftmost() Copies beginning elements in array.
+1450         7. MRlib323.invert_object() Return name:value -> value:name.
+1460         8. MRlib323.object_attach_props() Add properties to an object.
+1480         9. MRlib323.object_props_to_array() Return values only.
+1488         10. MRlib323.outnum() Turns leading tabs into outline numbers.
+1551         11. MRlib323.to_string() Instant object.toString().
+1628     H. String Functions
+1630         1. MRlib323.trim() Trim leading, trailing blanks from return.
+1643         2. MRlib323.triml() Trim leading blanks from returned string.
+1654         3. MRlib323.trimr() Trim trailing blanks from returned string.
+1665     I. X-Browser Functions
+1667         1. MRlib323.center() Return [left, top] to center a rectangle.
+1679         2. MRlib323.fixup_mouse_event() Make all browsers the same.
+1734         3. MRlib323.remove_children() Cross-browser element emptier.
+1746         4. MRlib323.set_opacity() Cross-browser opacity setter.
+1768         5. MRlib323.window_size() Guesses the browser window's size.
+1788 III. Classes
+1790     A. Delem
+1792         1. MRlib323.Delem() DOM element wrappers.
+1824         2. MRlib323.Delem.prototype.draw()
+1831         3. MRlib323.Delem.prototype.toString()
+1840     B. Gradient Classes
+1842         1. Gradient Class
+1844             a) MRlib323.Gradient() Trap 'new Gradient()' errors.
+1850             b) MRlib323.Gradient.init() Support H... and VGradient.
+1877             c) MRlib323.Gradient.prototype.paint() Master paint func.
+1959         2. HGradient Class
+1961             a) MRlib323.HGradient() Create an HGradient instance.
+1971             b) MRlib323.HGradient.init() Init HGradient instance.
+1985             c) MRlib323.HGradient.prototype.paint - Inherits Gradient.
+1998         3. HGradOpposed Class
+2000             a) MRlib323.HGradOpposed() Create an HGradOpposed instance.
+2010             b) MRlib323.HGradOpposed.init() Init instance.
+2025             c) MRlib323.HGradOpposed.prototype.paint - from Gradient.
+2039         4. VGradient Class
+2041             a) MRlib323.VGradient() Create a VGradient instance.
+2051             b) MRlib323.VGradient.init() Init instance.
+2064             c) MRlib323.VGradient.prototype.paint - from Gradient.
+2077         5. VGradOpposed Class
+2079             a) MRlib323.VGradOpposed() Create a VGradOpposed instance.
+2089             b) MRlib323.VGradOpposed.init() Init instance.
+2104             c) MRlib323.VGradOpposed.prototype.paint - from Gradient.
+2118     C. Outline
+2120         1. Non-Class Properties
+2123             a) data:
+2205             b) elements: DOM element wrappers.
+2208             c) fixup_data: Massage data during build.
+2262             d) mouseover:
+2267             e) mouseout:
+2272             f) text_for_plus: A " ", "+" or "-" for entries.
+2281             g) MRlib323.outline.letter() A == 1, B == 2, ...
+2288             h) MRlib323.outline.letter_lower() a == 1, b ==2, ...
+2295             i) MRlib323.outline.roman() Roman numerals, given number.
+2319             j) MRlib323.outline.roman_lower() i, ii, iii, etc.
+2325             k) MRlib323.outline.section_number() E. g., '1.2.3'
+2331             l) MRlib323.outline.outline_number() E.g., 'I.B.3'
+2354         2. Constructor, Main Object
+2382         3. Prototype, Main Object
+2385             a) click_header_minus_plus:
+2416             b) click_numbering_button:
+2431             c) enable_header_minus_plus:
+2455             d) numbering_button_enable:
+2483             e) repaint:
+2534             f) view: Convenience, view_plain().
+2536             g) view_plain:
+2551             h) view_with_header: The standard view.
+2737             i) toString:
+2747         4. Outline Entries (Rows)
+2831         5. Outline Entry Prototype
+2833             a) fold:
+2844             b) mouseover:
+2847             c) mouseout:
+2851             d) click_entry_plus:
+2862             e) click_topic:
+2869             f) toString:
+2880     D. Rect Class
+2884         1. MRlib323.Rect()
+2893         2. MRlib323.Rect.init()
+2917         3. MRlib323.Rect.prototype.draw()
+2962     E. Table Class
+2964         1. Table Instance Basics
+2966             a) MRlib323.Table() Create a Table instance.
+3031             b) MRlib323.Table.init() Initialize a Table instance.
+3055         2. Table Instance Methods
+3057             a) MRlib323.Table.prototype.get_object() Object from row.
+3071             b) MRlib323.Table.prototype.insert_col() Add a new column.
+3081             c) MRlib323.Table.prototype.join() this.xxx_id = that.id.
+3113             d) MRlib323.Table.prototype.order_by() Sort order.
+3154             e) MRlib323.Table.prototype.select() SQL-like SELECT.
+3179             f) MRlib323.Table.prototype.to_objects() To object of objects.
+3212             g) MRlib323.Table.prototype.to_code() Code to create table.
+3233             h) MRlib323.Table.prototype.to_table() Build an HTML table.
+3287             i) MRlib323.Table.prototype.where() Select rows.
+3359     F. Thread Class
+3378         1. MRlib323.Thread.prototype.sleep() Pause execution.
+3386         2. MRlib323.Thread.prototype.start() Run a thread once [or
+                                                 periodically]	[or for N runs].
+3419         3. MRlib323.Thread.prototype.stop() Stop, or # runs before stop.
+*/
+
+/**I Data */
+
+/** The global. */
+var MRlib323 = {};
+
+/** */
+MRlib323.COLOR = {
+	bgcolor:			'#f8f4f0',
+	disabled:			'#a0a0a0',
+	hover:				'white',
+	widget_background:  '#f0ece8',
+	widget_border:		'#b0aca8',
+	widget_browns:		'#a08040'
+};
+
+/** */
+MRlib323.CURSOR = {
+	hover:				'pointer',
+	normal:				'default'
+}
+
+/** Fader */
+MRlib323.fader_data =
+    { left: 130, top: 70, fade_millis: 8000, delay_millis: 2000 };
+
+/** Initial Values */
+MRlib323.inits = {};
+
+/** Messages */
+MRlib323.messages = {};
+MRlib323.messages.gradient =
+        'Use new HGradient or new VGradient. Not new Gradient.';
+
+/** Morphing */
+MRlib323.MILLIS_PER_FRAME = 40; // 25 fps
+MRlib323.FRAMES_PER_SECOND = 1000 / MRlib323.MILLIS_PER_FRAME;
+
+/* Note: Fewer millis per frame, (more frames per second, fps) gives a
+smoother morph. However, if you are morphing multiple elements simultaneously,
+lower fps may be better. Test on low-powered devices. */
+
+/** */
+MRlib323.STYLES = {
+	widget: {
+		backgroundColor:	MRlib323.COLOR.widget_background,
+		border:				'5px solid ' + MRlib323.COLOR.widget_border,
+		borderRadius:		'5px 5px 0 0',
+		display:			'inline-block',
+		fontSize:			'9pt',
+		padding:			'3px'
+	},
+	widget_hover: {
+		backgroundColor:	MRlib323.COLOR.hover,
+		cursor:				MRlib323.CURSOR.hover
+	},
+	widget_nohover: {
+		backgroundColor:	MRlib323.COLOR.widget_background,
+		cursor:				MRlib323.CURSOR.normal
+	}
+};
+
+/**I Functions */
+
+	/**A Animation Functions */
+
+/* Morph speed is 20 frames per second. Morph begins after
+optional delay (default === 0 millis). */
+
+	/**1 Dance (Morph Controller) */
+
+/** Perform a 'dance'.
+
+The 'dance_steps' are:
+[   [time0, style_specs0],
+    [time1, style_specs1],
+    ... ]
+
+The 'style_specs' are:
+{ style_name0: value0, style_name1: value1, ... }
+
+The dance begins at 'style_specs0', held for 'time0', continues
+with simultaneous morphs to 'style_specs1' over 'time1', ...
+doc: fe-e/engineers/javascript/mr-lib/animation/dance.html */
+MRlib323.dance = function ( element, dance_steps ) {
+
+    if ( element.is_dancing ) { return; }
+
+    element.is_dancing = true;
+    var elapsed_time = 0;
+    var last_styles = {};
+
+    for ( var i in dance_steps ) {
+
+        var step = dance_steps[ i ];
+        var time = step[ 0 ];
+        var styles = step[ 1 ];
+
+        if ( i === '0' ) {
+            MRlib323.style_an_element( element, step );
+        } else {
+            MRlib323.morph_change_specs( element, changes(styles, last_styles),
+                    time, elapsed_time );
+        }
+
+        MRlib323.object_attach_props( last_styles, styles );
+        var prev_step = step;
+        elapsed_time += time;
+
+    } // end: for ( i in dance_steps )
+
+    setTimeout( function () { element.is_dancing = false; },
+            elapsed_time + 100 );
+
+    /* if "styles.width = '100px'" and "last_styles.width = '50px'",
+    "changes().width = '50px;100px'" */
+    function changes( styles, last_styles ) {
+
+        var chg = {};
+
+        for ( var style in styles ) {
+            var last = last_styles[ style ];
+            if ( last ) { chg[ style ] = last + ';' + styles[ style ]; }
+        }
+
+        return chg;
+
+    } // end changes()
+
+} // end: dance()
+
+    /**1 Morphs */
+
+/** Morph background color.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_background_color = function ( element, start_color, end_color,
+        millis_morph, millis_delay ) {
+
+    if ( millis_delay === undefined ) { millis_delay = 0; }
+
+    var number_of_changes = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var delta_time = millis_morph / number_of_changes;
+    var colors = MRlib323.spread_colors( start_color, end_color,
+            number_of_changes );
+    var es = element.style;
+    var time = 0;
+
+    for ( var i = 0; i < number_of_changes; i += 1 ) {
+        setTimeout( get_morph_func(colors[ i ]), time + millis_delay );
+        time += delta_time;
+    }
+
+    setTimeout( get_morph_func(end_color), millis_morph + millis_delay );
+
+    function get_morph_func( color ) {
+        var bgc = color;
+        return function () { es.backgroundColor = bgc; }
+    }
+
+} // end: morph_background_color()
+
+/** Morph border color.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_border_color = function ( element, start_color, end_color,
+        millis_morph, millis_delay ) {
+
+    if ( millis_delay === undefined ) { millis_delay = 0; }
+
+    var number_of_changes = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var delta_time = millis_morph / number_of_changes;
+    var colors = MRlib323.spread_colors( start_color, end_color,
+            number_of_changes );
+    var es = element.style;
+    var time = 0;
+
+    for ( var i = 0; i < number_of_changes; i += 1 ) {
+        setTimeout( get_morph_func(colors[ i ]), time + millis_delay );
+        time += delta_time;
+    }
+
+    setTimeout( get_morph_func(end_color), millis_morph + millis_delay );
+
+    function get_morph_func( color ) {
+        var bc = color;
+        return function () { es.borderColor = bc; }
+    }
+
+} // end: morph_background_color()
+
+/** Morph horz & vert.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_border_radii = function ( element,
+        start_horz_radius, start_vert_radius, end_horz_radius, end_vert_radius,
+        millis_morph, millis_delay ) {
+
+    if ( millis_delay === undefined ) { millis_delay = 0; }
+
+    var number_of_changes = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var delta_time = millis_morph / number_of_changes;
+
+    var horzes = MRlib323.morph_steps( start_horz_radius, end_horz_radius,
+            number_of_changes );
+    var verts = MRlib323.morph_steps( start_vert_radius, end_vert_radius,
+            number_of_changes );
+
+    var specs = [];
+    for ( var i in horzes ) {
+        horzes[ i ] = horzes[ i ] + 'px';
+        verts[ i ] = verts[ i ] + 'px';
+        specs.push( horzes[i] + ' ' + verts[i] );
+    }
+
+    MRlib323.morph_styles( element, {borderRadius: specs},
+            millis_morph, millis_delay );
+
+} // end: morph_border_radii()
+
+/** Morph per 'change_specs'.
+
+The 'change_specs' are an object: '{style0: change0, style1: change1, ... }'
+The changes are 'start;end' strings: 'start_value;end_value'
+
+The values supported are:
+    number: 'opacity: "0.0;0.5"'
+    pixels: 'width: "100px;200px"'
+    colors: 'backgroundColor: "#a0a0ff;#f0f0ff"'
+    two_px: 'borderRadius: "20px / 40px;30px / 50px"'
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_change_specs = function ( element, change_specs,
+        millis_morph, millis_delay ) {
+
+    var morph_specs = {};
+    var frames = millis_morph / MRlib323.MILLIS_PER_FRAME;
+
+    for ( var prop in change_specs ) {
+        morph_specs[ prop ] = MRlib323.morph_from_change( change_specs[prop],
+                frames );
+    }
+
+    MRlib323.morph_styles( element, morph_specs, millis_morph, millis_delay );
+
+} // end: morph_change_specs()
+
+/** Morph from one opacity to another.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_opacity = function ( element, start_opacity, end_opacity,
+        millis_morph, millis_delay ) {
+
+    var frames = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var opacities = MRlib323.morph_steps( start_opacity, end_opacity, frames );
+
+    MRlib323.morph_styles( element, {opacity: opacities},
+            millis_morph, millis_delay );
+
+} // end: morph_opacity()
+
+/** Morph position.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_position = function ( element, start_left, start_top,
+        end_left, end_top, millis_morph, millis_delay ) {
+
+    var frames = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var lefts = MRlib323.morph_steps( start_left, end_left, frames );
+    var tops = MRlib323.morph_steps( start_top, end_top, frames );
+
+    for ( var i in lefts ) {
+        lefts[ i ] = lefts[ i ] + 'px';
+        tops[ i ] = tops[ i ] + 'px';
+    }
+
+    MRlib323.morph_styles( element, {left: lefts, top: tops},
+            millis_morph, millis_delay );
+
+} // end: morph_position()
+
+/** Morph a pixel-measured style.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_px_style = function ( element, style_name, start, end,
+        millis_morph, millis_delay ) {
+
+    var frames = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var values = MRlib323.morph_steps( start, end, frames );
+
+    for ( var i in values ) { values[ i ] = values[ i ] + 'px'; }
+
+    var specs_obj = {};
+        specs_obj[ style_name ] = values;
+    MRlib323.morph_styles( element, specs_obj, millis_morph, millis_delay );
+
+} // end: morph_px_style()
+
+/** Morph size.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_size = function ( element, start_width, start_height,
+        end_width, end_height, millis_morph, millis_delay ) {
+
+    var frames = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var widths = MRlib323.morph_steps( start_width, end_width, frames );
+    var heights = MRlib323.morph_steps( start_height, end_height, frames );
+
+    for ( var i in widths ) {
+        widths[ i ] = widths[ i ] + 'px';
+        heights[ i ] = heights[ i ] + 'px';
+    }
+
+    MRlib323.morph_styles( element, {width: widths, height: heights},
+            millis_morph, millis_delay );
+
+} // end: morph_size()
+
+/** Morph size and location.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-functions.html */
+MRlib323.morph_size_loc = function ( element, start_width, start_height,
+        start_left, start_top, end_width, end_height, end_left, end_top,
+        millis_morph, millis_delay ) {
+
+    var frames = millis_morph / MRlib323.MILLIS_PER_FRAME;
+
+    var widths  = MRlib323.morph_steps( start_width, end_width, frames );
+    var heights = MRlib323.morph_steps( start_height, end_height, frames );
+    var lefts   = MRlib323.morph_steps( start_left, end_left, frames );
+    var tops    = MRlib323.morph_steps( start_top, end_top, frames );
+
+    for ( var i in widths ) {
+        widths[ i ] = widths[ i ] + 'px';
+        heights[ i ] = heights[ i ] + 'px';
+        lefts[ i ] = lefts[ i ] + 'px';
+        tops[ i ] = tops[ i ] + 'px';
+    }
+
+    MRlib323.morph_styles( element, {width: widths, height: heights,
+            left: lefts, top: tops}, millis_morph, millis_delay );
+
+} // end: morph_size_loc()
+
+	/**1 Morph Support */
+
+/** 'change_spec' to 'morph_spec'.
+
+A 'change_spec' - width: '100px;200px'
+A 'morph_spec'  - width: ['100px', '102px', '104px', ... ]
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-support-functions.html */
+MRlib323.morph_from_change = function ( change, num_frames ) {
+
+    var start_stop = change.split( ';' );
+    var start = start_stop[ 0 ];
+    var stop  = start_stop[ 1 ];
+
+    return spread( start, stop, num_frames );
+
+    function spread( start, stop, num_frames ) {
+
+        if ( is_a_number(start) ) {
+                return spread_a_number( start, stop, num_frames ); }
+
+        if ( is_a_px(start) ) {
+                return spread_a_px( start, stop, num_frames ); }
+
+        if ( is_a_pct(start) ) {
+                return spread_a_pct( start, stop, num_frames ); }
+
+        if ( is_a_color(start) ) {
+                return spread_a_color( start, stop, num_frames ); }
+
+        if ( is_two_px(start) ) {
+                return spread_two_px( start, stop, num_frames ); }
+
+        throw "In 'morph_from_change()', 'spread()', could not spread '" +
+                change + "'.";
+
+    } // end: spread()
+
+    function spread_a_number( start, stop, num_frames ) {
+
+        if ( !is_a_number(stop) ) { throw '' +
+                "In 'morph_from_change()', 'spread_a_number()', '" +
+                stop + "' is not a valid stop spec."; }
+
+        return MRlib323.morph_steps( parseFloat(start, 10),
+                parseFloat(stop, 10), num_frames );
+
+    } // end: spread_a_number()
+
+    function spread_a_px( start, stop, num_frames ) {
+
+        if ( !is_a_px(stop) ) { throw '' +
+                "In 'morph_from_change()', 'spread_a_px()', '" +
+                stop + "' is not a valid stop spec."; }
+
+        var arr = MRlib323.morph_steps( parseInt(start, 10),
+                parseInt(stop, 10), num_frames, true );
+        for ( var i in arr ) { arr[ i ] += 'px'; }
+
+        return arr;
+
+    } // end: spread_a_px()
+
+    function spread_a_pct( start, stop, num_frames ) {
+
+        if ( !is_a_pct(stop) ) { throw '' +
+                "In 'morph_from_change()', 'spread_a_pct()', '" +
+                stop + "' is not a valid stop spec."; }
+
+        var arr = MRlib323.morph_steps( parseInt(start, 10),
+                parseInt(stop, 10), num_frames, true );
+        for ( var i in arr ) { arr[ i ] += '%'; }
+
+        return arr;
+
+    } // end: spread_a_pct()
+
+    function spread_a_color( start, stop, num_frames ) {
+
+        if ( !is_a_color(stop) ) { throw '' +
+                "In 'morph_from_change()', 'spread_a_color()', '" +
+                stop + "' is not a valid stop spec."; }
+
+        return MRlib323.spread_colors( start, stop, num_frames );
+
+    } // end: spread_a_color()
+
+    function spread_two_px( start, stop, num_frames ) {
+
+        if ( !is_two_px(stop) ) { throw '' +
+                "In 'morph_from_change()', 'spread_two_px()', '" +
+                stop + "' is not a valid stop spec."; }
+
+        var starts = start.split( '/' );
+        var stops = stop.split( '/' );
+
+        var pix0s = MRlib323.morph_steps( parseInt(starts[ 0 ], 10),
+                parseInt(stops[ 0 ], 10), num_frames, true );
+
+        var pix1s = MRlib323.morph_steps( parseInt(starts[ 1 ], 10),
+                parseInt(stops[ 1 ], 10), num_frames, true );
+
+        var arr = [];
+
+        for ( var i in pix0s ) {
+                arr.push( pix0s[i] + 'px/' + pix1s[i] + 'px' ); }
+
+        return arr;
+
+    } // end: spread_two_px()
+
+    /*
+    ^           BOI
+    \s*         zero or more whitespace
+    \d+         one or more digits
+    (\.         a period
+    \d+         one or more digits
+    )?          zero or one times
+    \s*         zero or more whitespace
+    $           EOI
+    */
+    function is_a_number( str ) { return /^\s*\d+(\.\d+)?\s*$/.test( str ); }
+
+    /*
+    ^           BOI
+    \s*         zero or more whitespace
+    \d+         one or more digits
+    px          literal 'px'
+    \s*         zero or more whitespace
+    $           EOI
+    */
+    function is_a_px( str ) { return /^\s*\d+px\s*$/.test( str ); }
+
+    /*
+    ^           BOI
+    \s*         zero or more whitespace
+    \d+         one or more digits
+    %          literal '%'
+    \s*         zero or more whitespace
+    $           EOI
+    */
+    function is_a_pct( str ) { return /^\s*\d+%\s*$/.test( str ); }
+
+    /*
+    ^           BOI
+    \s*         zero or more whitespace
+    #           the '#' character
+    [0-9a-fA-F]{6}  six hex digits
+    \s*         zero or more whitespace
+    $           EOI
+    */
+    function is_a_color( str ) { return /^\s*#[0-9a-fA-F]{6}\s*$/.test( str ); }
+
+    /*
+    ^           BOI
+    \s*         zero or more whitespace
+    \d+         one or more digits
+    px          literal 'px'
+    \s*         zero or more whitespace
+    \/          a forward slash
+    \s*         zero or more whitespace
+    \d+         one or more digits
+    px          literal 'px'
+    \s*         zero or more whitespace
+    $           EOI
+    */
+    function is_two_px( str ) { return /^\s*\d+px\s*\/\s*\d+px\s*$/.test(
+            str ); }
+
+} // end: morph_from_change()
+
+/** Convert 3, 9, 4 into [3, 5, 7, 9].
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-support-functions.html */
+MRlib323.morph_steps = function ( start, end, nsteps, round ) {
+
+    // nsteps = # of values, including start and end
+    var nvalues = end - start,
+        values = [];
+
+    values.push( start );
+    for ( var i = 1; i < (nsteps - 1); i++ ) {
+        var next = start + ( i * nvalues ) / ( nsteps - 1 );
+        if ( round ) { next = Math.round( next ) };
+        values.push( next );
+    }
+    values.push( end );
+
+    return values;
+
+} // end: morph_steps()
+
+/** Morph styles.
+
+'morph_specs' are an object:
+    { style0: [val0, val1, ... valn], style1: [val0, val1, ... valn], ... }
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-support-functions.html */
+MRlib323.morph_styles = function (
+        element, morph_specs, millis_morph, millis_delay ) {
+
+    if ( millis_delay === undefined ) { millis_delay = 0; }
+
+    var number_of_changes = millis_morph / MRlib323.MILLIS_PER_FRAME;
+    var delta_time = millis_morph / number_of_changes;
+
+    var time = 0;
+
+    for ( var i = 0; i < number_of_changes; i += 1 ) {
+        setTimeout( get_morph_func(morph_specs, i), time + millis_delay );
+        time += delta_time;
+    } // end: for ( i = 0 to number_of_changes )
+
+    function get_morph_func(specs, frame_num) {
+
+        var style_specs = {};
+        for ( var name in specs ) {
+            var vals = specs[ name ];
+            if ( vals[frame_num] ) { style_specs[ name ] = vals[ frame_num ]; }
+        }
+
+        return function ()
+            { MRlib323.style_an_element( element, style_specs ); }
+
+    } // end: get_morph_func()
+
+} // end: morph_styles()
+
+/** Start/end colors to morph array.
+doc: fe-e/engineers/javascript/mr-lib/animation/morph-support-functions.html */
+MRlib323.spread_colors = function ( start_color, end_color, ncolors ) {
+
+    var red=0, green=1, blue=2;
+    var colors = [],
+        start = MRlib323.color2rgb( start_color ),
+        end   = MRlib323.color2rgb( end_color ),
+        reds, greens, blues;
+
+    var round = true;
+
+    reds = MRlib323.morph_steps( start[red], end[red], ncolors, round );
+    greens = MRlib323.morph_steps( start[green], end[green], ncolors, round );
+    blues = MRlib323.morph_steps( start[blue], end[blue], ncolors, round );
+
+    for ( var i = 0; i < ncolors; i++ ) {
+        colors[ i ] = MRlib323.rgb2color( reds[i], greens[i], blues[i] );
+    }
+
+    return colors;
+
+} // end: spread_colors()
+
+	/**A Array Functions*/
+
+/** One-dimensional shallow copy.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_copy = function ( arr ) {
+    var ret = [];
+    for ( var i in arr ) { ret[ i ] = arr[ i ]; }
+    return ret;
+}
+
+/** Two-dimensional shallow copy.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_2d_copy = function ( arr ) {
+    var ret = [];
+    for ( var i in arr ) { ret[ i ] = MRlib323.array_copy( arr[i] ); }
+    return ret;
+}
+
+/** Returns [0, 1, 2, ... 9] for count(10).
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_count = function ( num ) {
+	var ret = [];
+	for ( var i = 0; i < num; i += 1 ) { ret[ i ] = i; }
+	return ret;
+}
+
+/** Delete array element.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_delete = function( arr, index ) { arr.splice( index, 1 ); }
+
+/** Fill new array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html  */
+MRlib323.array_fill = function ( value, count ) {
+    var arr = [];
+    for ( var i = 0; i < count; i += 1 ) { arr[ i ] = value; }
+    return arr;
+}
+
+/** Find index in array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_index_of = function ( array, value ) {
+
+        for ( var i in array ) {
+            if ( array[i] === value ) { return parseInt( i, 10 ); }
+        }
+        return -1;
+
+} // end: array_index_of()
+
+/** Find indexes in array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_indexes_of = function ( array, values ) {
+
+    var ret = [];
+    for ( var i in values ) {
+        ret[ i ] = MRlib323.array_index_of( array, values[i] ) ;
+    }
+    return ret;
+
+} // end: array_indexes()
+
+/** Pad array to length.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_pad = function ( arr, value, length ) {
+	if ( arr === undefined ) { return MRlib323.array_fill( value, length ); }
+	while ( arr.length < length ) { arr.push( value ); }
+} // end: array_pad()
+
+
+/** Return shuffled indices.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_shuffle = function ( num ) {
+
+	var last = num - 1;
+	var unused = MRlib323.array_count( num ),
+		shuffle = [];
+
+	var rem = unused.length;
+	while( rem > 0 ) {
+		var trial = Math.floor( rem * Math.random() );
+		shuffle.push( unused[trial] );
+		unused.splice( trial, 1 );
+		rem = unused.length;
+	}
+	return shuffle;
+
+} // end: // array_shuffle()
+
+/** Array starts with other array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_starts_with = function ( array, start_array ) {
+
+    if ( array.length < start_array.length ) { return false; }
+
+    for ( var i in start_array ) {
+            if ( array[i] !== start_array[i] ) { return false; } }
+    return true;
+
+} // end: array_starts_with()
+
+/** Array from array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_subscript = function ( array, cols ) {
+
+/*  array_subscript( [1, 2, 3], [0, 1] )     -> [1, 2]
+    array_subscript( [1, 2, 3], [-1, 1, 3] ) -> [2] */
+
+    var ret = [];
+    for ( var i in cols ) {
+        var col = cols[ i ],
+            val = array[ col ];
+        if ( val ) { ret.push( val ); }
+    }
+    return ret;
+
+} // end: array_subscript()
+
+/** Array_2d from array_2d.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.array_2d_subscript = function ( array, cols ) {
+
+    var ret = [];
+    for ( var i in array ) {
+        ret[ i ] = MRlib323.array_subscript( array[i], cols );
+    }
+    return ret;
+
+} // end: array_2d_subscript()
+
+/** Arrays to items within array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.flatten = function ( arr ) {
+
+    var ret = [];
+    for ( var i in arr ) {
+        ret = ret.concat( arr[i] );
+    }
+
+    return ret;
+
+} // end: flatten()
+
+/** Get a column from a 2D array.
+doc: fe-e/engineers/javascript/mr-lib/functions/array-functions.html */
+MRlib323.get_column = function ( arr, index ) {
+
+    var col = [];
+    for ( var i in arr ) { col[ i ] = arr[ i ][ index ]; }
+    return col;
+
+} // end: get_column()
+
+/**A Artists Effects Functions*/
+
+/** Flash: show briefly.
+doc: fe-e/engineers/javascript/mr-lib/effects.html */
+MRlib323.show_div = function ( div, millis ) {
+    div.style.display = 'block';
+    setTimeout( function () { div.style.display = 'none'; }, millis );
+}
+
+/** Glimmer: show dreamily.
+doc: fe-e/engineers/javascript/mr-lib/effects.html */
+MRlib323.glimmer = function (
+        elem, max_opacity, millis_up, millis_down, millis_delay ) {
+
+    MRlib323.morph_opacity( elem, 0.0, max_opacity, millis_up, millis_delay );
+    MRlib323.morph_opacity( elem, max_opacity, 0.0,
+            millis_down, millis_up + millis_delay );
+
+} // end: glimmer()
+
+/** Hover: show while over trigger.
+doc: fe-e/engineers/javascript/mr-lib/effects.html */
+MRlib323.hover = function ( trig_id, div_id ) {
+
+    var trigger = document.getElementById( trig_id );
+        if ( !trigger ) { throw "MRlib323.hover: trigger not found."; }
+    var div = document.getElementById( div_id );
+        if ( !div ) { throw "MRlib323.hover: display div not found."; }
+
+    trigger.onmouseover = function () { div.style.display = 'block'; }
+    trigger.onmouseout = function () { div.style.display = 'none'; }
+
+} // end: hover()
+
+/** Popup: show with close button(s).
+doc: fe-e/engineers/javascript/mr-lib/effects.html */
+MRlib323.popup = function ( trig_id, div_id ) {
+
+    var trigger = document.getElementById( trig_id );
+        if ( !trigger ) { throw "MRlib323.popup: trigger not found."; }
+    var div = document.getElementById( div_id );
+        if ( !div ) { throw "MRlib323.popup: display div not found."; }
+
+    var closer = MRlib323.create_attached_element( div, 'div', '',
+        {background: 'red', color: 'white', fontSize: '14px',
+        fontWeight: 'bold', height: '15px', paddingBottom: '2px',
+        position: 'absolute', right: '5px', textAlign: 'center',
+        top: '3px', width: '15px'},
+        {innerHTML: 'X'} );
+        closer.onmouseover = function () {
+            this.style.background = 'pink';
+            this.style.cursor = 'pointer';
+        };
+        closer.onclick =
+                function () { this.parentNode.style.display = 'none'; }
+        closer.onmouseout = function () {
+            this.style.background = 'red';
+            this.style.cursor = 'default'
+        };
+
+    trigger.onmouseover = function () { div.style.display = 'block'; }
+
+} // end: popup()
+
+/** Shake: move, move back.
+
+Element must be 'position: relative;' at 0, 0.
+doc: fe-e/engineers/javascript/mr-lib/effects.html */
+MRlib323.shake = function ( element, left, top, millis, millis_delay ) {
+
+    if ( millis_delay === undefined ) { millis_delay = 0; }
+
+    MRlib323.morph_position( element, 0, 0, left, top,
+            millis / 2, millis_delay );
+    MRlib323.morph_position( element, left, top, 0, 0,
+            millis / 2, (millis / 2) + millis_delay );
+
+} // end: shake()
+
+/** Swell: then unswell, an element.
+doc: fe-e/engineers/javascript/mr-lib/effects.html */
+MRlib323.swell = function ( element, width_start, height_start,
+        width_end, height_end, millis, millis_delay ) {
+
+    if ( millis_delay === undefined ) { millis_delay = 0; }
+
+    MRlib323.morph_size( element,  width_start, height_start,
+            width_end, height_end, millis / 2, millis_delay );
+    MRlib323.morph_size( element,  width_end, height_end,
+            width_start, height_start,
+            millis / 2, (millis / 2) + millis_delay );
+
+} // end: swell()
+
+    /**A Color Functions */
+
+/** '#rrggbb' (hex) to [r, g, b] (decimal).
+doc: fe-e/engineers/javascript/mr-lib/functions/color-functions.html */
+MRlib323.color2rgb = function ( color ) {
+    var red   = parseInt( color.substr(1, 2), 16 ),
+        green = parseInt( color.substr(3, 2), 16 ),
+        blue  = parseInt( color.substr(5, 2), 16 );
+    return [ red, green, blue ];
+} // end: color2rgb()
+
+/** 'rgb(240,240,255)' to '#f0f0ff'.
+doc: fe-e/engineers/javascript/mr-lib/functions/color-functions.html */
+MRlib323.hex_color_string = function ( color_string ) {
+
+	if ( color_string[0] === '#' ) { return color_string; }
+	if ( color_string.indexOf('rgb') !== -1 ) {
+			return make_hex( color_string ); }
+	throw 'hex_color_string() input unknown: "' + color_string + '"';
+
+	function make_hex( c_s ) { // c_s === 'color_string'
+		/*	[^\d]+		one or more non-digits
+			(\d+)		$1, some digits
+			,\s*		comma, optional whitespace
+			(\d+)		$2, some digits
+			,\s*		comma, optional whitespace
+			(\d+)		$3, some digits
+			.*			whatever
+		*/
+		c_s.match(  /[^\d]+(\d+),\s*(\d+),\s(\d+).*/  )
+
+		var r = parseInt( RegExp.$1, 10 ),
+			g = parseInt( RegExp.$2, 10 ),
+			b = parseInt( RegExp.$3, 10 );
+
+		return MRlib323.rgb2color( r, g, b );
+	}
+
+} // end: hex_color_string()
+
+/** [r, g, b] (decimal) to '#rrggbb' (hex).
+doc: fe-e/engineers/javascript/mr-lib/functions/color-functions.html */
+MRlib323.rgb2color = function ( r, g, b ) {
+    var color = '#' +
+        hex2( r.toString(16) ) +
+        hex2( g.toString(16) ) +
+        hex2( b.toString(16) );
+    return color;
+
+    function hex2( hex ) {
+        return hex.length === 2 ? hex : '0' + hex;
+    }
+} // end: rgb2color()
+
+	/**A Compare (Sort) Functions*/
+
+/** Compare case-insensitive.
+doc: fe-e/engineers/javascript/mr-lib/functions/compare-functions.html */
+MRlib323.compare_nocase = function ( a, b ) {
+
+    var x = a.toUpperCase(),
+        y = b.toUpperCase();
+
+    if ( x > y ) { return 1; }
+    if ( x === y ) { return 0; }
+    return -1;
+
+} // end: compare_nocase()
+
+/** Compare numbers.
+doc: fe-e/engineers/javascript/mr-lib/functions/compare-functions.html */
+MRlib323.compare_numbers = function ( a, b ) {
+    return a - b;
+}
+
+/** Compare mixed.
+A number is greater than any non-number.
+String comparison is not case-sensitive.
+First is 'greater' if they are equal (to preserve existing order).
+doc: fe-e/engineers/javascript/mr-lib/functions/compare-functions.html */
+MRlib323.compare_numbers_and_strings = function ( a, b ) {
+    var ret;
+
+    if ( (a==='') && (b==='') ) return -1;
+
+    if ( (typeof a === 'number') && (typeof b === 'number') ) {
+            ret = MRlib323.compare_numbers( a, b );
+            if ( ret === 0 ) { ret = -1; }
+            return ret;
+    }
+
+    if ( (typeof a === 'string') && (typeof b === 'string') ) {
+            ret = MRlib323.compare_nocase( a, b );
+            if ( ret === 0 ) { ret = -1; }
+            return ret;
+    }
+
+    if ( typeof a === 'number' ) { return 1; } // typeof b !== 'number'
+    if ( typeof b === 'number' ) { return -1; }
+
+    return -1; // a !== b and neither is a number
+
+} // end: compare_numbers_and_strings()
+
+/** Compare descending.
+Strings, then numbers, descending.
+doc: fe-e/engineers/javascript/mr-lib/functions/compare-functions.html */
+MRlib323.compare_reverse = function ( a, b ) {
+        return -MRlib323.compare_numbers_and_strings( a, b ); }
+
+    /**A DOM-Related Functions */
+
+/** Create/attach DOM elem.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html
+styles object doc: fe-e/engineers/javascript/mr-lib/styles-object.html*/
+MRlib323.create_attached_element =
+        function ( parent, type, id, style_specs, other_specs ) {
+
+    var ret = MRlib323.create_element( type, id, style_specs, other_specs );
+    parent.appendChild( ret );
+    return ret;
+
+} // end: create_attached_element()
+
+/** Create a new DOM element.
+
+Note: The style_specs properties are copied, (not style_specs itself).
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html
+styles object doc: fe-e/engineers/javascript/mr-lib/styles-object.html*/
+MRlib323.create_element = function ( type, id, style_specs, other_specs ) {
+
+    var elem = document.createElement( type );
+        elem.id = id;
+
+	if ( style_specs !== undefined ) {
+			MRlib323.style_an_element( elem, style_specs ); }
+	if ( other_specs !== undefined ) {
+		for ( var prop in other_specs ) {
+				elem[ prop ] = other_specs[ prop ]; }
+	}
+
+    return elem;
+
+} // end: create_element()
+
+/** Includes kids, grandkids, etc.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+MRlib323.detach_element = function ( elem ) {
+
+    while( elem.firstChild && (elem.firstChild !== undefined) ) {
+			MRlib323.detach_element( elem.firstChild ); }
+    if ( elem.parentNode ) { elem.parentNode.removeChild( elem ); }
+
+} // end: detach_element()
+
+/* doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+/** */
+MRlib323.detach_element_by_id = function ( id ) {
+
+    var elem = document.getElementById( id );
+    if ( elem !== null ) { MRlib323.detach_element( elem ); }
+
+} // end: detach_element_by_id()
+
+/* doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+/** Add styles to DOM element. */
+MRlib323.edit_add_styles = function ( elem, new_styles ) {
+
+	for ( var s in new_styles ) {
+		elem.style[ s ] = new_styles[ s ];
+	}
+
+} // end: edit_add_styles()
+
+/** Get size of element.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+MRlib323.get_size = function ( elem ) {
+	var rect = elem.getBoundingClientRect();
+	var w = rect.right - rect.left;
+	var h = rect.bottom - rect.top;
+	return { width: w, height: h };
+} // end: get_size()
+
+/** Create arg & evt.target.
+See warning in doc!
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html */
+MRlib323.fixup_event = function ( event ) {
+	if ( event === undefined ) { event = window.event; }
+	if ( event.target === undefined ) { event.target = event.srcElement; }
+	return event;
+} // end: fixup_event()
+
+/**
+Existing element must be a child (or grandchild, or ...) of 'document.body'.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+MRlib323.insert_after = function ( element_new, element_existing ) {
+
+    var parent = element_existing.parentNode,
+        sibling = element_existing.nextSibling;
+
+    if ( sibling ) {
+        parent.insertBefore( element_new, sibling );
+    } else { parent.appendChild( element_new ); }
+
+} // end: insert_after()
+
+/** Create an array given a NodeList.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+MRlib323.nodelist2array = function ( nl ) {
+
+    var ret = [];
+    for ( var i=0; i < nl.length; i++ ) { ret.push( nl[i] ); }
+    return ret;
+} // end: nodelist2array()
+
+/** 300 from '300px'.
+
+Returns 100 from '100px' or 5 from 'groove 5px #f0f0ff'.
+doc: fe-e/engineers/javascript/mr-lib/functions/dom-functions.html */
+MRlib323.number_from_style_px = function ( val ) {
+
+    /*  \b      word boundary
+        (\d+)   start $1, one or more decimal digits, end $1
+        px      'px'
+        \b      word boundary
+    */
+    val.match(  /\b(\d+)px\b/  );
+    return parseInt( RegExp.$1, 10 );
+
+} // end: number_from_style_px()
+
+/** Center text in element.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+MRlib323.say_center = function ( parent, text, styles ) {
+
+	if ( styles === undefined ) {
+		styles = {
+			/* background: 'white',
+			border: '1px solid green',
+			textAlign: 'center' */
+		};
+	}
+	if ( styles.display  === undefined ) { styles.display  = 'inline-block'; }
+	if ( styles.position === undefined ) { styles.position = 'absolute'; }
+
+	var div = MRlib323.create_attached_element( parent, 'div', '', styles );
+		div.innerHTML = text;
+
+	var parent_size = MRlib323.get_size( parent ),
+		text_size	= MRlib323.get_size( div ),
+		diff = text_size.width - parent_size.width;
+
+	div.style.left = - ( diff / 2 ) + 'px';
+
+	return div;
+
+} // end: say_center()
+
+/** Vertical center text in element.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html*/
+MRlib323.say_middle = function ( parent, text, styles ) {
+
+	if ( styles === undefined ) {
+		styles = {
+			/* background: 'white',
+			border: '1px solid green',
+			textAlign: 'center' */
+		};
+	}
+	if ( styles.display  === undefined ) { styles.display  = 'inline-block'; }
+	if ( styles.position === undefined ) { styles.position = 'absolute'; }
+	if ( styles.padding  === undefined ) { styles.paddingBottom = '2px'; }
+
+	var div = MRlib323.create_attached_element( parent, 'div', '', styles );
+		div.innerHTML = text;
+
+	var parent_size = MRlib323.get_size( parent ),
+		text_size	= MRlib323.get_size( div ),
+		diff = text_size.height - parent_size.height;
+
+	div.style.top = - ( diff / 2 ) + 'px';
+
+	return div;
+
+} // end: say_middle()
+
+/** Style given styles object(s).
+Sample styles object:
+    { position:'relative', left:'100px', top: '50px', background: 'blue' }
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html
+styles object doc: fe-e/engineers/javascript/mr-lib/styles-object.html */
+MRlib323.style_an_element = function ( elem, styles ) {
+
+	if ( styles.length === undefined ) { styles = [ styles ]; }
+
+	for ( var i in styles ) {
+		var style_obj = styles[ i ];
+		for ( var prop in style_obj ) {
+
+			if ( prop === 'opacity' ) {
+				MRlib323.set_opacity( elem, style_obj.opacity );
+
+			} else if ( prop === 'cssFloat' ) {
+				elem.style[ 'cssFloat' ] = elem.style[ 'styleFloat' ] =
+						style_obj[ prop ];
+
+			} else {
+				if ( style_obj[prop] === undefined ) { throw "" +
+						"Error in 'MRlib323.style_an_element()': " +
+						"value === undefined. Styles object: " +
+						MRlib323.to_string( style_obj ); }
+if ( style_obj[prop] !== '-1px' ) {
+				elem.style[ prop ] = style_obj[ prop ]; }
+}
+		} // end: for ( prop in style_obj
+	} // end: for ( i in styles )
+
+} // end: style_an_element()
+
+/** Style elements with one style set.
+doc: fe-e/engineers/javascript/mr-lib/dom-functions.html
+styles object doc: fe-e/engineers/javascript/mr-lib/styles-object.html*/
+MRlib323.style_elements = function ( elems, styles ) {
+    if ( elems.length === 0 ) { return; }
+    for ( var i in elems ) { MRlib323.style_an_element( elems[i], styles ); }
+}
+
+	/**A Other Functions */
+
+/** Return all props in a new object.
+doc: fe-e/engineers/javascript/mr-lib/misc-functions.html */
+MRlib323.add_objects = function ( object_1, object_2 ) {
+
+	var object_0 = {}, prop;
+	for ( prop in object_1 ) { object_0[ prop ] = object_1[ prop ]; }
+	for ( prop in object_2 ) { object_0[ prop ] = object_2[ prop ]; }
+	return object_0;
+
+} // end: edit_add_objects()
+
+/** Shallow copy.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.copy_object = function ( obj ) {
+	var ret = {};
+	for ( var prop in obj ) { ret[ prop ] = obj[ prop ]; }
+	return ret;
+}
+
+/** Format date as dd-Mon-yyyy.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.date2dd_Mon_yyyy = function ( date ) {
+
+    var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
+
+    var day = two_digit( '' + date.getDate() );
+    var mon = months[ date.getMonth() ];
+    var year = date.getFullYear();
+
+    return day + '-' + mon + '-' + year;
+
+    function two_digit( str ) { return str.length === 1 ? '0' + str : str; }
+
+} // end: date2dd_Mon_yyyy()
+
+/** Return dividing points.
+Divides a range (low through high) into n equal divisions. Returns the
+values at the dividing points. Examples:
+div_points(0,9,3) // [3, 6]
+div_points(2,12,5 // [4, 6, 8, 10]
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.div_points = function ( low, high, ndivs ) {
+
+	var diff = high - low;
+	var points = [];
+	for ( var i = 1; i < ndivs; i += 1 ) {
+		points.push( (i * diff / ndivs) + low );
+	}
+
+	return points;
+
+} // end: div_points()
+
+/** Display a message, briefly.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.fader = function ( msg, left, top, fade_millis, delay_millis ) {
+
+/* Note: this 'parent' stuff is a kludge because I found I needed it
+but it wasn't there. Redesign! */
+
+    var parent;
+    if ( MRlib323.fader.parent !== undefined ) {
+        parent = MRlib323.fader.parent;
+    } else {
+        parent = document.body;
+    }
+
+    if ( !left         ) { left         = MRlib323.fader_data.left; }
+    if ( !top          ) { top          = MRlib323.fader_data.top; }
+    if ( !fade_millis  ) { fade_millis  = MRlib323.fader_data.fade_millis; }
+    if ( !delay_millis ) { delay_millis = MRlib323.fader_data.delay_millis; }
+
+    var fade_elem = MRlib323.create_attached_element(
+        parent, 'div', '', {left: left + 'px', top: top + 'px',
+                background: '#f8f4f0', border: '3px double black',
+                display: 'inline-block', margin: '20px', padding: '20px',
+                position: 'fixed'} );
+        MRlib323.fader.parent = undefined;
+
+    fade_elem.innerHTML = msg;
+    MRlib323.morph_opacity( fade_elem, 1.0, 0.0,
+            fade_millis, delay_millis );
+
+    setTimeout( cleanup, fade_millis + delay_millis + 1000 );
+
+    function cleanup() { MRlib323.detach_element( fade_elem ); }
+
+} // end of fader();
+
+/** Copies beginning elements in array.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.leftmost = function ( arr, number ) {
+
+    ret = [];
+    number = Math.min( arr.length, number );
+    if ( number < 1 ) { return ret; }
+
+    for ( var i = 0; i < number; i += 1 ) { ret[ i ] = arr[ i ]; }
+
+    return ret;
+
+} // end: leftmost()
+
+/** Return name:value -> value:name.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.invert_object = function ( obj ) {
+
+    var ret = {};
+    for ( prop in obj ) { ret[ obj[prop] ] = prop; }
+    return ret;
+
+} // end: invert_object()
+
+/** Add properties to an object.
+
+'props' is a property object:
+    {name0: val0, name1: val1, . . .}
+
+or 'props' is an array of property objects, as above.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.object_attach_props = function ( obj, props ) {
+
+    if ( !props.length ) { props = [ props ]; }
+
+    for ( var i in props ) {
+        var prop_obj = props[ i ];
+        for ( var prop in prop_obj ) { obj[ prop ] = prop_obj[ prop ]; }
+    }
+
+    return obj;
+
+} // end: object_attach_props()
+
+/** Return values only.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.object_props_to_array = function ( obj ) {
+    var arr = [];
+    for ( var i in obj ) { arr.push( obj[i] ); }
+    return arr;
+}
+
+/** Turns leading tabs into outline numbers.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.outnum = function ( arr ) {
+
+	var input_line,
+		level_maxs = [],
+		ret = [],
+		topic;
+
+	for ( var i in arr ) {
+
+		if ( typeof arr[i] === 'string' ) { input_line = [ arr[i] ]; }
+		else { // don't edit the input array!
+			input_line = [];
+			for ( var j in arr[i] ) { input_line[ j ] = arr[ i ][ j ]; }
+		}
+		topic = input_line[ 0 ];
+
+		// '\t\tfoo' becomes [ 2, 'foo' ]
+		var count_strip = count_and_strip( topic );
+		var count = count_strip[ 0 ]; // 2
+		var strip = count_strip[ 1 ]; // 'foo'
+		level_maxs = array_trim_and_copy( level_maxs, count );
+
+		level_maxs[ count - 1 ] += 1;
+		input_line[ 0 ] = strip;
+		ret.push( [level_maxs].concat(input_line) );
+
+	} // end: for ( i in arr )
+
+	return ret;
+
+	function array_trim_and_copy( arr, len ) {
+
+		/* Returns a shallow copy of the first 'len' elements of 'arr'.
+		Zero-fills return if 'arr' is shorter than 'len'. */
+
+		var ret = [];
+
+		for ( var i = 0; i < len; i += 1 ) {
+			var next = arr[i];
+			if ( next === undefined ) { next = 0; }
+			ret.push( next );
+		}
+		return ret;
+
+	} // end: array_trim_and_copy()
+
+	function count_and_strip( str ) {
+
+		// Given string, returns array:
+		//	[ # leading tabs, string w/o tabs ]
+
+		var i = 0;
+		while ( str[i] === '\t' ) {
+			i += 1;
+		}
+		return [ i, str.substr(i) ];
+
+	} // end: count_and_strip()
+
+} // end: outnum()
+
+/** Instant object.toString().
+Primitives other than 'string' are returned as strings.
+Strings are enclosed in apostrophes. Embedded apostrophes, returns and linefeeds are escaped (visually).
+Arrays are wrapped in '[' and ']'. Array contents are comma-separated
+values. Only the first 'arr_max' array entries are shown, if there are more.
+Other Objects are wrapped in '{' and '}'. Object contents are comma-separated name:value pairs.
+Each value in an Array or other Object is to_string()ed recursively.
+doc: fe-e/engineers/javascript/mr-lib/functions/misc-functions.html */
+MRlib323.to_string = function ( x, arr_max ) {
+
+    var type = typeof x;
+
+    // primitives
+        if ( type === 'string'    ) { return string( x );   }
+        if ( type === 'number'    ) { return x.toString();  }
+        if ( type === 'boolean'   ) { return x.toString();  }
+        if ( type === 'undefined' ) { return type;          }
+        if ( type === 'null'      ) { return type;          }
+
+    // objects
+        if ( type === 'function'  ) { return func( x );     }
+        if ( x instanceof Array   ) { return array( x, arr_max );    }
+
+    // For a generic object use the 'toString()' if it doesn't contain 'Object',
+    // otherwise, enumerate the properties.
+    var str = x.toString();
+    if ( str === undefined ) { return str; }
+    return ( str.indexOf( 'Object' ) === -1 ) ?
+            str : ( '{' + props_of( x ) + '}' );
+
+    function array( arr, arr_max ) {
+
+        var ret = [];
+
+        var alen;
+        if ( arr_max === undefined ) { alen = arr.length; }
+        else { alen = Math.min( arr_max, arr.length ); }
+
+        for ( var i = 0; i < alen; i += 1 ) {
+            ret[ i ] = MRlib323.to_string( arr[ i ], arr_max );
+        }
+        if ( arr.length > alen ) { ret[ arr_max = '...' ]; }
+
+        return '[' + ret.join( ',' ) + ']';
+
+    } // end: array()
+
+    function func( f ) { // function plus additional properties
+        return '{' + f.toString() + props_of( f ) + '}';
+    }
+
+    function maybe_quote( propname ) {
+        // don't quote property name if all 'word' chars
+        if ( /^\w+$/.test(propname) ) { return propname; }
+        return string( propname );
+    }
+
+    function props_of( o ) { // list name:value pairs
+        var ret = [];
+        for ( var name in o ) {
+            if ( !o.hasOwnProperty(name) ) { continue; }
+            ret.push( maybe_quote(name) + ':' +
+                    MRlib323.to_string(o[ name ], arr_max) );
+        }
+        return ret.join( ',' );
+    } // end: props_of()
+
+    function string( str ) {
+        return "'" +
+                str.replace(  /'/g, "\\'"  ).
+                    replace(  /\t/g, "\\t" ).
+                    replace(  /\r/g, "\\r" ).
+                    replace(  /\n/g, "\\n" ) + "'";
+    } // end: string()
+
+} // end: toString()
+
+	/**A String Functions*/
+
+/** Trim leading, trailing blanks from return.
+doc: fe-e/engineers/javascript/mr-lib/functions/string-functions.html */
+MRlib323.trim = function ( str ) {
+    /*  ^       BOI
+        /s*     zero or more whitespace
+        (.*\S)  zero or more any chars, ending in non-white, $1
+        /s*     zero or more whitespace
+        $       EOI */
+    if ( str.match(  /^\s*(.*\S)\s*$/  ) ) { return RegExp.$1; }
+    return '';
+
+} // end: trim()
+
+/** Trim leading blanks from returned string.
+doc: fe-e/engineers/javascript/mr-lib/functions/string-functions.html */
+MRlib323.triml = function ( str ) {
+    /*  ^       BOI
+        \s*     zero or more whitespace
+        (.*)    zero or more non-white, $1
+        $       EOI */
+    if ( str.match(  /^\s*(.*)$/  ) ) { return RegExp.$1; }
+    return '';
+} // end: triml()
+
+/** Trim trailing blanks from returned string.
+doc: fe-e/engineers/javascript/mr-lib/functions/string-functions.html */
+MRlib323.trimr = function ( str ) {
+    /*  ^       BOI
+        (.*\S)  zero or more any char, ending in non-white, $1
+        \s*     zero or more whitespace
+        $       EOI */
+    if ( str.match(  /^(.*\S)\s*$/  ) ) { return RegExp.$1; }
+    return '';
+} // end: trimr()
+
+/**A X-Browser Functions */
+
+/** Return [left, top] to center a rectangle.
+Doc: fe-e/engineers/javascript/mr-lib/xbrowser-functions.html*/
+MRlib323.center = function ( width, height ) {
+
+    var size = MRlib323.window_size();
+    return [
+        Math.round( (size.width - width) / 2 ),
+        Math.round( (size.height - height) / 2 )
+    ];
+
+} // end: center()
+
+/** Make all browsers the same.
+
+My code from 2009. Still valid?
+Doc: fe-e/engineers/javascript/mr-lib/xbrowser-functions.html*/
+MRlib323.fixup_mouse_event = function ( event ) {
+
+    event = event || window.event;
+
+    var e = { event: event,
+        target: event.target ? event.target : event.srcElement,
+        which: event.which ? event.which :
+            event.button === 1 ? 1 :
+            event.button === 2 ? 3 :
+            event.button === 4 ? 2 : 1,
+        x: event.x ? event.x : event.clientX,
+        y: event.y ? event.y : event.clientY
+    };
+    return e;
+
+} // end: fixup_mouse_event()
+
+/**
+Note: class_names may be multiple: 'foo bar' for all 'foo's and 'bar's in
+the elements class attribute, but must be singular for the MSIE flavor of
+this function.
+
+Returns array, not nodelist.
+Doc: fe-e/engineers/javascript/mr-lib/xbrowser-functions.html*/
+MRlib323.get_elements_by_class_name = function ( parent_elem, class_name ) {
+
+    if ( ! parent_elem ) { return []; }
+
+    if ( parent_elem.getElementsByClassName ) {
+        return MRlib323.nodelist2array(
+                parent_elem.getElementsByClassName(class_name) );
+    }
+
+// MSIE, here down
+
+    var all_elems = MRlib323.nodelist2array(
+            parent_elem.getElementsByTagName("*") ),
+        elems = [],
+        regex = new RegExp( '\\b' + class_name + '\\b' );
+
+    for ( var i in all_elems ) {
+        elem = all_elems[ i ];
+        if ( elem.className && regex.test(elem.className) ) {
+            elems.push( elem );
+        }
+    } // end: for ( i in all_elems )
+
+    return elems;
+
+} // end: get_elements_by_class_name()
+
+/** Cross-browser element emptier.
+Doc: fe-e/engineers/javascript/mr-lib/xbrowser-functions.html*/
+MRlib323.remove_children = function ( element ) {
+
+    element.innerHTML = ''; // that should be all
+
+    while ( element.firstChild ) { // but MSIE needs this
+        element.removeChild( element.firstChild );
+    }
+
+} // end: remove_children()
+
+/** Cross-browser opacity setter.
+Konqueror had, then lost, opacity capability.
+MozOpacity and KhtmlOpacity are probably extinct.
+Doc: fe-e/engineers/javascript/mr-lib/xbrowser-functions.html*/
+MRlib323.set_opacity = function ( elem, opacity ) {
+
+	// regex: optional whitespace, one or more digits, a '%' sign, anything
+	if ( (typeof opacity === 'string') && opacity.match(  /\s*\d+%.*/  ) ) {
+		opacity = parseInt( opacity, 10 ) / 100.0;
+	}
+
+    if ( opacity < 0 ) { opacity = 0.0; } // 0.0 === invisible
+    if ( opacity > 1 ) { opacity = 1.0; } // 1.0 === opaque
+
+    var s = elem.style;
+        s.opacity = opacity; // most modern browsers
+        // s.MozOpacity = opacity; // original Mozilla
+        // s.KhtmlOpacity = opacity; // older Konqueror, Safari
+        s.filter = "alpha(opacity=" + (100*opacity) + ")"; // guess who
+
+} // end of set_opacity()
+
+/** Guesses the browser window's size.
+doc: fe-e/engineers/javascript/mr-lib/xbrowser-functions.html*/
+MRlib323.window_size = function () {
+
+    var w, h;
+    if ( window.innerWidth ) {
+        w = innerWidth;
+        h = innerHeight;
+    } else if ( document.documentElement.clientWidth !== 0 ) {
+        w = document.documentElement.clientWidth;
+        h = document.documentElement.clientHeight;
+    } else {
+        w = document.body.clientWidth;
+        h = document.body.clientHeight;
+    }
+
+    return { width: w, height: h };
+
+}  // end of window_size()
+
+/**I Classes */
+
+	/**A Delem */
+
+/** DOM element wrappers.
+doc: fe-e/engineers/javascript/mr-lib/classes/delem-class.html*/
+MRlib323.Delem = function ( type, id,
+		left, top, width, height, styles, other ) {
+
+	var delem = this;
+		delem.type = type;
+		delem.id = id;
+		delem.styles = styles;
+		if ( delem.styles.position === undefined ) {
+				delem.styles.position = 'absolute'; }
+		delem.other = other;
+
+	record_and_style( delem, [left, top, width, height] );
+
+	delem[ type ] = MRlib323.create_element( type, id, styles, other );
+	delem.elem = delem[ type ]; // create a synonym
+
+	function record_and_style( delem, values ) {
+
+		// E.g., delem.left = 100; delem.style.left = '100px';
+		var names = [ 'left', 'top', 'width', 'height' ];
+		for ( var i in names ) {
+			var name = names[ i ], value = values[ i ];
+			delem[ name ] = value;
+			delem.styles[ name ] = value + 'px';
+		}
+
+	} // end: record_and_style()
+
+} // end: Delem()
+
+/** */
+MRlib323.Delem.prototype.draw = function ( parent ) {
+	var delem = this;
+	delem.parent = parent;
+	parent.appendChild( delem[delem.type] ); // E.g., delem.div or delem.span
+}
+
+/** */
+MRlib323.Delem.prototype.toString = function () {
+	return 'Delem{' +
+			'type=' + this.type +
+			',id=' + this.id +
+			',posloc=' + this.left + ',' + this.top + ',' +
+			this.width + ',' + this.height + '}';
+}
+
+	/**A Gradient Classes */
+
+		/**1 Gradient Class */
+
+/** Trap 'new Gradient()' errors.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.Gradient = function () {
+    throw new Error( MRlib323.messages.gradient );
+}
+
+/** Support H... and VGradient.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.Gradient.init = function ( instance_ref, parent,
+            left, top, width, height, start_color, end_color, is_span ) {
+
+    instance_ref.parent = parent;
+    instance_ref.left = left;
+    instance_ref.top = top;
+    instance_ref.width = width;
+    instance_ref.height = height;
+    instance_ref.start_color = start_color;
+    instance_ref.end_color = end_color;
+    instance_ref.type = is_span ? 'span' : 'div';
+
+    instance_ref.background = MRlib323.create_attached_element( parent,
+            instance_ref.type, '',
+            {height: height + 'px',
+            left: left + 'px',
+            position: 'absolute',
+            top: top + 'px',
+            width: width + 'px'}
+    );
+
+    instance_ref.wash = [];
+
+} // end: Gradient()
+
+/** Master paint func.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.Gradient.prototype.paint = function () {
+
+    // delete old wash
+    for ( var i in this.wash ) {
+        this.background_div.removeChild( this.wash[i].div );
+    }
+    this.wash = [];
+
+    var num_grads = this.horizontal ? this.width : this.height;
+    this.colors = spread_colors(
+            this.start_color, this.end_color, num_grads, this.opposed );
+
+    for ( var i = 0; i < num_grads; i += 1 ) {
+
+        var left_loc, top_loc, width_size, height_size;
+
+        if ( this.horizontal ) {
+            left_loc = i;
+            top_loc = 0;
+            width_size = 1;
+            height_size = this.height;
+        } else {
+            left_loc = 0;
+            top_loc = i;
+            width_size = this.width;
+            height_size = 1;
+        }
+
+        var color_band_styles = {
+                backgroundColor:    this.colors[i],
+                display:            'block',
+                left:               left_loc + 'px',
+                height:             height_size + 'px',
+                position:           'absolute',
+                top:                top_loc + 'px',
+                width:              width_size + 'px'
+        };
+
+        var parent = this.background;
+        var color_band = MRlib323.create_attached_element(
+                parent, 'span', '', color_band_styles );
+        this.wash.push( color_band );
+
+    } // end: for ( 0 to num_grads loop )
+
+    function spread_colors( start, end, num, opposed ) {
+
+        var ret;
+
+        if ( opposed ) {
+            var num_up = Math.round( num_grads / 2 ),
+                num_down = num_grads - num_up;
+
+            ret = MRlib323.spread_colors( start, end, num_up );
+            ret = ret.concat( MRlib323.spread_colors(end, start, num_down) );
+
+        } else {
+            ret = MRlib323.spread_colors( start, end, num_grads );
+        }
+
+        return ret;
+
+    } // end: spread_colors()
+
+} // end: Gradient.paint()
+
+/**
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.Gradient.prototype.toString = function () {
+    return 'Gradient{' +
+        'parent=' + this.parent +
+        ', left=' + this.left +
+        ',top=' + this.top +
+        ', width=' + this.width +
+        ',height=' + this.height +
+        ', start_color=' + this.start_color +
+        ',end_color=' + this.end_color +
+    '}';
+} // end: Gradient.toString()
+
+		/**1 HGradient Class */
+
+/** Create an HGradient instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradient = function ( parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.HGradient.init( this, parent,
+            left, top, width, height, start_color, end_color, is_span );
+
+} // end: HGradient()
+
+/** Init HGradient instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradient.init = function( instance_ref, parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.Gradient.init(  instance_ref, parent,
+            left, top, width, height, start_color, end_color, is_span );
+    instance_ref.horizontal = true;
+    instance_ref.opposed = false;
+
+    instance_ref.paint();
+
+} // end: HGradient.init()
+
+/** Inherits Gradient.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradient.prototype.paint = MRlib323.Gradient.prototype.paint;
+
+/**
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradient.prototype.toString = function () {
+    return 'HGradient{' +
+        MRlib323.Gradient.prototype.toString.call( this ) +
+        ',horizontal=' + this.horizontal +
+    '}';
+} // end HGradient.toString()
+
+		/**1 HGradOpposed Class */
+
+/** Create an HGradOpposed instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradOpposed = function ( parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.HGradOpposed.init( this, parent,
+        left, top, width, height, start_color, end_color, is_span );
+
+} // end: HGradOpposed()
+
+/** Init instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradOpposed.init = function ( instance_ref, parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.Gradient.init( instance_ref, parent,
+        left, top, width, height, start_color, end_color, is_span );
+
+    instance_ref.horizontal = true;
+    instance_ref.opposed = true;
+
+    instance_ref.paint();
+
+} // end: HGradOpposed.init()
+
+/** from Gradient.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradOpposed.prototype.paint = MRlib323.Gradient.prototype.paint;
+
+/**
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.HGradOpposed.prototype.toString = function () {
+
+    return 'HGradOpposed{' +
+        Gradient.toString.call( this ) +
+    '}';
+
+} // end: HGradOpposed.toString()
+
+		/**1 VGradient Class */
+
+/** Create a VGradient instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradient = function ( parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+	MRlib323.VGradient.init( this, parent,
+            left, top, width, height, start_color, end_color, is_span );
+
+} // end: VGradient()
+
+/** Init instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradient.init = function( instance_ref, parent,
+            left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.Gradient.init(  instance_ref, parent,
+            left, top, width, height, start_color, end_color, is_span );
+    instance_ref.horizontal = false;
+
+    instance_ref.paint();
+
+} // end: VGradient.init()
+
+/** from Gradient.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradient.prototype.paint = MRlib323.Gradient.prototype.paint;
+
+/**
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradient.prototype.toString = function () {
+    return 'VGradient{' +
+        MRlib323.Gradient.prototype.toString.call( this ) +
+        ',horizontal=' + this.horizontal +
+    '}';
+} // end VGradient.toString()
+
+		/**1 VGradOpposed Class */
+
+/** Create a VGradOpposed instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradOpposed = function ( parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.VGradOpposed.init( this, parent,
+        left, top, width, height, start_color, end_color, is_span );
+
+} // end: VGradOpposed()
+
+/** Init instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradOpposed.init = function ( instance_ref, parent,
+        left, top, width, height, start_color, end_color, is_span ) {
+
+    MRlib323.Gradient.init( instance_ref, parent,
+        left, top, width, height, start_color, end_color, is_span );
+
+    instance_ref.horizontal = false;
+    instance_ref.opposed = true;
+
+    instance_ref.paint();
+
+} // end: VGradOpposed.init()
+
+/** from Gradient.
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradOpposed.prototype.paint = MRlib323.Gradient.prototype.paint;
+
+/**
+doc: fe-e/engineers/javascript/mr-lib/classes/gradient-classes.html */
+MRlib323.VGradOpposed.prototype.toString = function () {
+
+    return 'VGradOpposed{' +
+        Gradient.toString.call( this ) +
+    '}';
+
+} // end: VGradOpposed.toString()
+
+/**A Outline */
+
+/**1 Non-Class Properties */
+MRlib323.outline = {
+
+	/** */
+	data: {
+
+		COLOR_disabled:	'#a0a0a0',
+		COLOR_enabled:  MRlib323.COLOR.widget_background,
+		COLOR_browns: MRlib323.COLOR.widget_browns,
+
+		default_height: 500,
+		indent_width:	12,
+
+		styles_entry: {
+			fontFamily:		'sans-serif',
+			fontSize:		'9pt',
+			whiteSpace:		'nowrap'
+		},
+		styles_header: {
+			borderBottom: '2px solid ' + MRlib323.COLOR.widget_browns,
+			fontSize: '14pt',
+			marginBottom: '3px'/*,
+			paddingBottom: '2px'*/
+		},
+		styles_header_minus_plus_buttons: {
+			border: '2px solid ' + MRlib323.COLOR.widget_browns,
+			borderRadius: '8px',
+			display: 'inline-block',
+			height: '15px',
+			lineHeight: '16px',
+			marginRight: '3px',
+			paddingLeft: '2px',
+			paddingRight: '2px',
+			paddingBottom: '3px',
+			position: 'relative',
+			top: '-2px'
+		},
+		styles_header_minus_button: {
+			fontSize: '10pt'
+		},
+		styles_header_plus_button: {
+			fontSize: '8pt'
+		},
+		styles_numbering_button: {
+			border: '2px inset ' + MRlib323.COLOR.widget_browns,
+			fontSize: '8pt',
+			marginLeft: '0px',
+			paddingLeft: '2px',
+			paddingRight: '2px',
+			position: 'relative',
+			top: '-4px'
+		},
+		styles_numbering_button_disabled: {
+			background: MRlib323.COLOR.disabled,
+			cursor:	'default'
+		},
+		styles_numbering_button_enabled: {
+			background: MRlib323.COLOR.widget_background,
+			cursor: 'pointer'
+		},
+		styles_plus_entry:	{
+			background: MRlib323.COLOR.widget_background,
+			cursor: 'default',
+			display: 'inline-block',
+			fontSize: '8pt',
+			fontWeight: 'bold',
+			postion: 'relative', width: '12px'
+		},
+		styles_plus_entry_foldable:	{
+			border: '1px solid #ff6000',
+			borderRadius: '7px',
+			textAlign: 'center',
+			width: '10px'
+		},
+		styles_entry_spacer:	{
+			display: 'inline-block',
+			left: '0px'
+		},
+		styles_topic:	{
+			paddingLeft: '2px',
+			paddingRight: '2px'
+		}
+
+	}, // end: MRlib323.outline.data{}
+
+	/** DOM element wrappers. */
+	elements: {},
+
+	/** Massage data during build. */
+	fixup_data: function ( data ) {
+		/* Called with:
+			a Table - leave it alone
+			an Array of strings - use them as the first column of a 2D array
+			a 2D array - first col is topics, remainder is content
+		*/
+		var i, table;
+
+		if ( data.constructor === MRlib323.Table ) {
+			table = data;
+		} else {
+
+			if ( typeof data[0] === 'string' ) {
+				for ( i in data ) { data[ i ] = [ data[i], [] ]; }
+			} else if ( data[0].length > 1 ) {
+// Got a 2D array? Turn each row into: ['a string', [other stuff array] ].
+				for ( i in data ) { data[ i ] =
+						[ data[i][0], data[i].slice(1) ]; }
+			}
+			table = new MRlib323.Table( 'Outline Table',
+					[ 'Outnums', 'Topic', 'Content' ], MRlib323.outnum(data) );
+			table.name = table.data[ 0 ][ 1 ];
+
+		} // end: data is a Table?
+
+		var folded_col = 1;
+		table.insert_col( folded_col, 'Folded', false );
+		undefine_non_foldables( table.data, folded_col );
+
+		return table;
+
+		function undefine_non_foldables( data, folded_col ) {
+
+			for ( var i in data ) {
+				if ( at_end(data, i) ) {
+					data[ i ][ folded_col ] = undefined ;
+					return;
+				} // end: if at last row
+
+				var row_level = data[ i ][ 0 ].length;
+				var next_row_level = data[ (+i) + 1 ][ 0 ].length;
+				if ( row_level >= next_row_level ) {
+						data[ i ][ folded_col ] = undefined; }
+			}
+
+			function at_end( data, row ) {
+				return ( +row ) + 1 === data.length;
+			}
+
+		} // end: undefine_non_foldables()
+
+	}, // end: Outline.fixup_data()
+
+	/** */
+	mouseover: function () {
+		this.style.backgroundColor = MRlib323.COLOR.hover;
+		this.style.cursor = MRlib323.CURSOR.hover;
+	},
+	/** */
+	mouseout: function () {
+		this.style.backgroundColor = MRlib323.COLOR.widget_background;
+		this.style.cursor = MRlib323.CURSOR.normal;
+	},
+	/** A " ", "+" or "-" for entries. */
+	text_for_plus: function ( folded ) {
+		if ( folded ) { return '+'; }
+		if ( folded === false ) { return '&ndash;'; }
+		return '&nbsp';
+	} // end: text_for_plus()
+
+} // end: MRlib323.outline {};
+
+/** A == 1, B == 2, ...
+doc: fe-e/engineers/javascript/mr-lib/classes/outline-class.html */
+MRlib323.outline.letter = function ( num ) {
+    if ( num > 26 ) { throw 'letter(): Alpha numbers larger than 26 not programmed.'; }
+    return ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'[ num ];
+}
+
+/** a == 1, b ==2, ...
+doc: fe-e/engineers/javascript/mr-lib/classes/outline-class.html */
+MRlib323.outline.letter_lower = function ( num ) {
+    if ( num > 26 ) { throw 'letter_lower(): Alpha numbers larger than 26 not programmed.'; }
+    return ' abcdefghijklmnopqrstuvwxyz'[ num ];
+}
+
+/** Roman numerals, given number.
+doc: fe-e/engineers/javascript/mr-lib/classes.outline-class.html */
+MRlib323.outline.roman = function ( num ) {
+
+    if ( num   <   1 ) { return ''; } // used below (5, 10, ...)
+
+    if ( num ===   1 ) { return   'I'; }
+    if ( num ===   2 ) { return  'II'; }
+    if ( num ===   3 ) { return 'III'; }
+    if ( num ===   4 ) { return  'IV'; }
+    if ( num   <   9 ) { return   'V' + MRlib323.outline.roman( num -  5 ); }
+    if ( num ===   9 ) { return  'IX'; }
+    if ( num   <  20 ) { return   'X' + MRlib323.outline.roman( num - 10 ); }
+    if ( num   <  30 ) { return  'XX' + MRlib323.outline.roman( num - 20 ); }
+    if ( num   <  40 ) { return 'XXX' + MRlib323.outline.roman( num - 30 ); }
+    if ( num   <  50 ) { return  'XL' + MRlib323.outline.roman( num - 40 ); }
+    if ( num   <  90 ) { return   'L' + MRlib323.outline.roman( num - 50 ); }
+    if ( num   < 100 ) { return  'XC' + MRlib323.outline.roman( num - 90 ); }
+    if ( num === 100 ) { return   'C'; }
+
+    throw ( 'roman(): Roman numbers larger than 100 not programmed.' );
+
+} // end: roman()
+
+/** i, ii, iii, etc.
+doc: fe-e/engineers/javascript/mr-lib/classes.outline-class.html */
+MRlib323.outline.roman_lower = function ( num ) {
+    return MRlib323.outline.roman( num ).toLowerCase();
+}
+
+/** E. g., '1.2.3'
+doc: fe-e/engineers/javascript/mr-lib/classes.outline-class.html */
+MRlib323.outline.section_number = function ( arr ) {
+    return arr.join( '.' ) + ' ';
+}
+
+/** E.g., 'I.B.3'
+doc: fe-e/engineers/javascript/mr-lib/classes.outline-class.html */
+MRlib323.outline.outline_number = function ( arr ) {
+
+    if ( arr.length > 9 ) {
+            throw  'section.outline_number() limited to 9 levels.'; }
+
+    switch ( arr.length - 1 ) {
+
+case 0: { return MRlib323.outline.roman( arr[0] ) + '. '; }
+case 1: { return MRlib323.outline.letter( arr[1] ) + '. '; }
+case 2: { return arr[2] + '. '; }
+case 3: { return MRlib323.outline.letter_lower( arr[3] ) + '. '; }
+case 4: { return MRlib323.outline.roman_lower( arr[4] ) + '. '; }
+case 5: { return '(' + MRlib323.outline.letter_lower( arr[5] ) + ') '; }
+case 6: { return '(' + MRlib323.outline.roman_lower( arr[6] ) + ') '; }
+case 7: { return '((' + MRlib323.outline.letter_lower( arr[7] ) + ')) '; }
+case 8: { return '((' + MRlib323.outline.roman_lower + ( arr[8] ) + ')) '; }
+
+	}
+
+} // end: outline.outline_number()
+
+/**1 Constructor, Main Object */
+MRlib323.Outline = function ( data, click_func ) {
+
+	var outline = this;
+	outline.table = MRlib323.outline.fixup_data( data );
+	outline.name = outline.table.name;
+
+	/* Length of starting row's outnums array, (starting item will not
+	be indented). Error (not trapped) if first item not least indented. */
+	outline.start_indent = outline.table.data[ 0 ][ 0 ].length;
+	outline.delem = MRlib323.create_element( 'div', '' );
+	outline.numbering = 'none'; // may become 'out' or 'tech'
+
+	outline.folds = { min: outline.start_indent, max: 0, current: 0 };
+	outline.entries = [];
+
+	for ( var i in outline.table.data ) {
+		var len = outline.table.data[ i ][ 0 ].length; // outnums length
+		outline.folds.min = Math.min( outline.folds.min, len );
+		outline.folds.max = Math.max( outline.folds.max, len );
+		outline.entries[ i ] =
+				new MRlib323.OutlineEntry( outline, i, click_func );
+	}
+
+	outline.folds.current = outline.folds.min;
+
+} // end: Outline
+
+/**1 Prototype, Main Object */
+MRlib323.Outline.prototype = {
+
+	/** */
+	click_header_minus_plus: function ( event ) {
+
+		var button = this;
+		var btn_obj = MRlib323.outline.elements[ button.id ];
+		var outline = btn_obj.header.outline;
+		var minus = button.id.indexOf( 'minus' ) > -1;
+
+		// unfold all at current level (plus), or
+		// fold all at previous level (minus)
+		for ( var i in outline.entries ) {
+			var entry = outline.entries[ i ];
+			var fold_level = minus ?
+					outline.folds.current - 1 : outline.folds.current;
+			if ( entry.level === fold_level ) { entry.fold( minus ); }
+		} // end: for i in entries
+
+		outline.repaint();
+
+		// Make next level current
+		outline.folds.current += minus ? -1 : 1;
+		outline.enable_header_minus_plus( true, !minus );
+
+		// disable a button if at end
+		if ( outline.folds.current === outline.folds.min ) {
+				outline.enable_header_minus_plus( false, true ); }
+		if ( outline.folds.current >= outline.folds.max ) {
+				outline.enable_header_minus_plus( false, false ); }
+
+	}, // end: Outline.click_header_minus_plus()
+
+	/** */
+	click_numbering_button: function ( event ) {
+		var button = MRlib323.outline.elements[ this.id ],
+			outline = button.header.outline;
+
+		outline.numbering = button.type;
+		outline.numbering_button_enable( outline.header.none );
+		outline.numbering_button_enable( outline.header.out );
+		outline.numbering_button_enable( outline.header.tech );
+		outline.numbering_button_enable( outline.header[button.type], false );
+
+		outline.repaint();
+
+	}, // end: Outline.click_numbering_button()
+
+	/** */
+	enable_header_minus_plus: function ( enable, minus ) {
+		/*  enable: if false, disable
+			minus:	if false, "+" button */
+
+		var outline = this;
+		var header = outline.header;
+		var button = minus ? header.minus : header.plus;
+
+		if ( enable ) {
+			button.delem.style.background =
+					MRlib323.outline.data.COLOR_enabled;
+			button.delem.onmouseover = MRlib323.outline.mouseover;
+			button.delem.onmouseout = MRlib323.outline.mouseout;
+			button.delem.onclick = outline.click_header_minus_plus;
+		} else {
+			button.delem.style.background =
+					MRlib323.outline.data.COLOR_disabled;
+			button.delem.onmouseover = null;
+			button.delem.onmouseout = null;
+			button.delem.onclick = null;
+		}
+	}, // end: Outline.enable_header_minus_plus()
+
+	/** */
+	numbering_button_enable: function ( button, enable ) {
+		// 'button' is the object wrapper
+		// 'enable' is a boolean. 'false' === disable.
+		if ( enable === undefined ) { enable = true; }
+
+		var outline = this,
+			delem = button.delem;
+
+		outline.numbering_type = enable ? button.type : '';
+		var style = enable ?
+				MRlib323.outline.data.styles_numbering_button_enabled :
+				MRlib323.outline.data.styles_numbering_button_disabled
+		MRlib323.style_an_element( delem, style );
+
+		// event listeners here!
+		if ( enable ) {
+			delem.onmouseover = MRlib323.outline.mouseover;
+			delem.onmouseout  = MRlib323.outline.mouseout;
+			delem.onclick = outline.click_numbering_button;
+		} else {
+			delem.onmouseover = null;
+			delem.onmouseout  = null;
+			delem.onclick = null;
+		}
+
+	}, // end: numbering_button_enable()
+
+	/** */
+	repaint: function () {
+
+		var outline = this;
+
+		var folded_flag = false,
+			folded_length = 0;
+
+		/* default: not folded, display: 'block'
+			if 'folded', display: 'none'
+
+			if 'entry.folded', set 'folded_flag' after displaying entry
+			'folded_flag' remains set while subsequent entries have greater
+			length of 'outnums' */
+
+		for ( var i in outline.entries ) {
+			var entry = outline.entries[ i ];
+			if ( folded_flag ) {
+				if ( folded_length >= entry.outnums.length ) {
+					folded_flag = false;
+				}
+			}
+			entry.delem.style.display = folded_flag ? 'none' : 'block';
+			if ( folded_flag ) { continue; }
+
+			if ( entry.folded ) {
+				folded_flag = true;
+				folded_length = entry.outnums.length;
+			}
+
+			entry.topic_span.innerHTML = number( entry );
+
+		} // end: for i in outline.entries
+
+		function number( entry ) {
+
+			var prefix = '';
+			var type = entry.outline.numbering;
+
+			if ( type === 'out' ) { prefix =
+					MRlib323.outline.outline_number( entry.outnums );
+			} else if ( type === 'tech' ) { prefix =
+					MRlib323.outline.section_number( entry.outnums );
+			}
+
+			return prefix + entry.topic
+
+		} // end: number()
+
+	}, // end: Outline.repaint()
+
+	/** Convenience, view_plain(). */
+	view: function ( parent, height ) {
+			this.view_plain( parent, height ); },
+
+	/** */
+	view_plain: function ( parent, height ) {
+		if ( parent === undefined ) { parent = document.body; }
+		if ( height === undefined ) { height =
+				MRlib323.outline.data.default_height; }
+
+		var outline = this;
+		var styles = MRlib323.STYLES.widget;
+			styles.height = height + 'px';
+			styles.overflowX = 'visible';
+			styles.overflowY = 'auto';
+		MRlib323.style_an_element( outline.delem, styles );
+		parent.appendChild( outline.delem );
+
+	}, // end: Outline.view_plain();
+
+	/** The standard view. */
+	view_with_header: function ( parent, height ) {
+		if ( parent === undefined ) { parent = document.body; }
+		if ( height === undefined ) { height =
+				MRlib323.outline.data.default_height; }
+
+		var outline = this;
+		outline.title = outline.table.name;
+
+	/* Default outline, built by constructor, has entries inside an
+		unstyled div. */
+		outline.entry_part = {};
+		// save existing delem
+			outline.entry_part.delem = outline.delem;
+			outline.entry_part.delem.style.overflowY = 'auto';
+
+		var styles = MRlib323.STYLES.widget;
+			// styles.height = height + 'px';
+		outline.delem = MRlib323.create_attached_element( parent, 'div', '',
+			styles );
+
+			if ( outline.header === undefined ) {
+			/* Default outline has title in first row. Remove it. */
+			var title_entry = outline.entries[ 0 ];
+			title_entry.delem.parentNode.removeChild( title_entry.delem );
+			outline.table.data = outline.table.data.slice( 1 );
+			outline.entries = outline.entries.slice( 1 );
+			outline.header = {};
+		} else {
+			// This should never be called. Untested.
+			throw "Repeated call to 'outline.view_with_header()' not tested.";
+			// outline.delem.removeChild( header.delem ); ???
+		}
+
+		outline.folds.min = Math.max( // outnums.length, top row
+			outline.folds.min, outline.table.data[0][0].length );
+		outline.folds.current =
+				Math.max( outline.folds.min, outline.folds.current );
+
+		build_header( outline );
+		outline.delem.appendChild( outline.header.delem );
+		outline.delem.appendChild( outline.entry_part.delem );
+		/*outline.entry_part.delem.style.height = height -
+				outline.header.delem.clientHeight - 3 + 'px';*/
+		// WARNING: '3', above, is a fudge factor
+		// Wanted: scroll that only shows whole lines.
+
+		// set spacing for entries
+		outline.start_indent += 1;
+		for ( var i in outline.entries ) {
+			var entry = outline.entries[ i ];
+			var indents = entry.outnums.length - outline.start_indent;
+			var indent = MRlib323.outline.data.indent_width * indents;
+			//entry.spacer_left.style.width = indent + 'px';
+					entry.topic_span.innerHTML = number_topic( entry );
+			if ( entry.level >= outline.folds.current ) { entry.fold(); }
+		}
+
+		// first level is all "+", disable header "-", enable header "+"
+		outline.enable_header_minus_plus( false, true );
+		outline.enable_header_minus_plus( true, false );
+		outline.repaint();
+
+// 		parent.appendChild( outline.delem );
+// unneeded line, triggers MSIE9 bug
+
+		function number_topic( entry ) {
+
+			var numbered_topic,
+				outline = entry.outline,
+				type = outline.numbering;
+
+			if ( type === 'out' ) {
+				numbered_topic = MRlib323.outline.outline_number( entry.outnums ) + entry.topic;
+				return numbered_topic;
+			}
+			if ( type === 'tech' ) {
+				numbered_topic = MRlib323.outline.section_number( entry.outnums ) + entry.topic;
+
+				return numbered_topic;
+			}
+			return entry.topic;
+
+		};
+
+		function build_header( outline ) {
+
+			/* Header is the top row. It's contents:
+				left side: "-" and "+" buttons to fold/unfold entire outline
+				center:		title
+				right:		blank, "I.B" and "1.2" buttons (numbering styles)
+
+			Button names are "minus" and "plus" (folding, on left),
+				"none", "out" and "tech" (numbering, on right).
+			*/
+
+			var header = outline.header,
+				name;
+			header.outline = outline;
+
+			header.delem = MRlib323.create_attached_element(
+					outline.delem, 'div', '',
+					MRlib323.outline.data.styles_header );
+
+			build_header_minus_plus( header, 'minus' );
+			build_header_minus_plus( header, 'plus' );
+
+			header.title = MRlib323.create_attached_element(
+					header.delem, 'span', '' );
+				header.title.innerHTML = outline.title;
+
+			build_header_numbering_button( header, 'none', 'disable' );
+			build_header_numbering_button( header, 'out', 'enable' );
+			build_header_numbering_button( header, 'tech', 'enable' );
+
+			function build_header_minus_plus( header, minus_plus ) {
+
+				/* 'header' is MRlib323.outline.header.
+					'minus_plus' is "minus" or "plus". */
+
+				var outline = header.outline;
+
+				var me = header[ minus_plus ] = {
+					header: header,
+					name: outline.name + '_header_' + minus_plus
+						// E.g., 'This Outline_header_minus'
+				}; // the "+" or "-" object (left of title)
+
+				// First, create a new <span> for the "-" or "+"
+				var data = MRlib323.outline.data;
+				var styles = data.styles_header_minus_plus_buttons;
+				var added_styles = data[ 'styles_' + name + '_button' ];
+				for ( var prop in added_styles ) {
+						styles[ prop ] = added_styles[ prop ]; }
+				me.delem = MRlib323.create_attached_element(
+						header.delem, 'div', '', styles );
+
+				// Give the span an id and register it.
+				me.delem.id = me.name;
+				MRlib323.outline.elements[ me.name ] = me;
+
+				// Add the text
+				me.delem.innerHTML = ( minus_plus === 'minus' ) ?
+						'&ndash;' : '+';
+
+				// Add the event listeners
+				me.delem.onmouseover = MRlib323.outline.mouseover;
+				me.delem.onmouseout  = MRlib323.outline.mouseout;
+
+			} // end: build_header_minus_plus()
+
+			function build_header_numbering_button(
+					header, none_out_tech, status ) {
+
+				var margin_left = { none: '2px', out: '', tech: '' },
+					text = { none: '&nbsp;&nbsp;',
+						out: '<span style="font-family: serif">I.B</span>',
+						tech: '1.2' };
+
+				var name = 'num_' + none_out_tech,
+					full_name = header.outline.name + '_' + name;
+
+				var button = {};
+					button.header = header;
+					button.header[ none_out_tech ] = button;
+					button.type = none_out_tech;
+					button.delem = MRlib323.create_attached_element(
+							header.delem, 'span', '',
+							MRlib323.outline.data.styles_numbering_button );
+					button.delem.style.marginLeft =
+							margin_left[ none_out_tech ];
+
+					button.delem.id = full_name;
+					MRlib323.outline.elements[ full_name ] = button;
+
+					button.delem.innerHTML = text[ none_out_tech ];
+
+				header.outline.numbering_button_enable(
+						button, status === 'enable' );
+
+			}; // end: build_header_numbering_buttons()
+
+		} // end: build_header()
+
+	}, // end: Outline.view_with_header();
+
+	/** */
+	toString: function () {
+		return 'Outline{' +
+			'table=' + this.table.name +
+			',entries=' + this.entries + 'OutlineEntry{}'  +
+			'}';
+	}
+
+} // end: MRlib323.Outline.prototype
+
+/**1 Outline Entries (Rows) */
+MRlib323.OutlineEntry = function( outline, table_row_number, click_func ) {
+
+	var outline_entry = this;
+	outline_entry.outline = outline;
+	outline_entry.table_row_number = table_row_number;
+	outline_entry.click_func = click_func;
+	outline_entry.table_row = outline.table.data[ table_row_number ];
+	outline_entry.name = outline_entry.outline.name + '_entry_' +
+			outline_entry.table_row_number;
+	outline_entry.outnums = outline_entry.table_row[ 0 ];
+	outline_entry.level = outline_entry.outnums.length;
+	outline_entry.folded  = outline_entry.table_row[ 1 ];
+	outline_entry.topic	= outline_entry.table_row[ 2 ];
+	outline_entry.content = outline_entry.table_row[ 3 ];
+
+	if ( typeof outline_entry.content === 'string' ) {
+			outline_entry.tooltip = outline_entry.content; }
+	else if ( outline_entry.content instanceof Array ) {
+			outline_entry.tooltip = outline_entry.content[ 0 ];
+	}
+	if ( outline_entry.tooltip === undefined ) {
+			outline_entry.tooltip = 'Click to select.'; }
+
+	outline_entry.delem = MRlib323.create_attached_element(
+			outline_entry.outline.delem, 'div', outline_entry.name,
+			MRlib323.outline.data.styles_entry );
+	MRlib323.outline.elements[ outline_entry.name ] = outline_entry;
+
+	build_spacer_left( outline_entry );
+	build_plus( outline_entry );
+	build_topic( outline_entry );
+
+	function build_spacer_left( outline_entry ) {
+
+		outline_entry.spacer_left = MRlib323.create_attached_element(
+				outline_entry.delem, 'span', '',
+				MRlib323.outline.data.styles_entry_spacer );
+		var indents = outline_entry.outnums.length -
+				outline_entry.outline.start_indent;
+		outline_entry.spacer_left.style.width =
+				( MRlib323.outline.data.indent_width * indents ) + 'px';
+
+	} // end: build_spacer_left()
+
+	function build_plus( outline_entry ) {
+
+		var styles = MRlib323.copy_object(
+				MRlib323.outline.data.styles_plus_entry ),
+			other = { innerHTML:
+					MRlib323.outline.text_for_plus(outline_entry.folded) };
+		if ( outline_entry.folded !== undefined ) {
+			styles = MRlib323.add_objects( styles,
+					MRlib323.outline.data.styles_plus_entry_foldable );
+		}
+		outline_entry.plus = MRlib323.create_attached_element(
+				outline_entry.delem, 'span', '', styles, other );
+
+		if ( outline_entry.folded !== undefined ) {
+			outline_entry.plus.onmouseover = outline_entry.mouseover;
+			outline_entry.plus.onmouseout = outline_entry.mouseout;
+			outline_entry.plus.onclick = outline_entry.click_entry_plus;
+		}
+
+	} // end: build_plus()
+
+	function build_topic( outline_entry ) {
+
+		outline_entry.topic_span = MRlib323.create_attached_element(
+				outline_entry.delem, 'span', outline_entry.name + '_topic',
+				MRlib323.outline.data.styles_topic,
+				{innerHTML: outline_entry.topic} );
+			MRlib323.outline.elements[ outline_entry.name + '_topic' ] =
+					outline_entry;
+			outline_entry.topic_span.title = outline_entry.tooltip;
+
+		outline_entry.topic_span.onmouseover = outline_entry.mouseover;
+		outline_entry.topic_span.onmouseout = outline_entry.mouseout;
+		outline_entry.topic_span.onclick = outline_entry.click_topic;
+
+	} // end: build_topic()
+
+} // end: OutlineEntry()
+
+/**1 Outline Entry Prototype */
+MRlib323.OutlineEntry.prototype = {
+	/** */
+	fold: function ( folding ) {
+		var entry = this;
+		if ( entry.folded === undefined ) { return; } // leaf node
+
+		if ( folding === undefined ) { folding = true; }
+		entry.folded = folding;
+		entry.table_row[ 1 ] = folding;
+		entry.plus.innerHTML = MRlib323.outline.text_for_plus( folding );
+	},
+
+	/** */
+	mouseover: function ( event ) {
+		MRlib323.edit_add_styles( this, MRlib323.STYLES.widget_hover ); },
+	/** */
+	mouseout: function ( event ) {
+		MRlib323.edit_add_styles( this, MRlib323.STYLES.widget_nohover ); },
+
+	/** */
+	click_entry_plus: function ( event ) {
+
+		// 'this' is the 'plus' span, its parent is the entry div
+		// 'o2e' is the OutlineEntry
+		var o2e = MRlib323.outline.elements[ this.parentNode.id ];
+		o2e.fold( !o2e.folded );
+		o2e.outline.repaint();
+
+	}, // end: OutlineEntry.click_entry_plus()
+
+	/** */
+	click_topic: function ( event ) {
+		var o2e = MRlib323.outline.elements[ this.id ];
+		if ( o2e.click_func !== undefined ) { o2e.click_func(); }
+		else { alert( 'Hyperlink not available: ' + o2e.topic + '.' ); }
+	},
+
+	/** */
+	toString: function () {
+		return 'OutlineEntry{' +
+			'name=' + this.name +
+			',outnums=' + MRlib323.to_string( this.outnums ) +
+			',topic=' + this.topic +
+			',content=' + MRlib323.to_string( this.content ) + '}';
+	} // end: OutlineEntry.toString()
+
+};
+
+/**A Rect Class */
+
+/*styles object doc: fe-e/engineers/javascript/mr-lib/styles-object.html
+doc: fe-e/engineers/javascript/mr-lib/rect-object.html */
+/** */
+MRlib323.Rect = function (
+		left/*0*/, top/*0*/, width/*300*/, height/*50*/,
+		styles, other, draw_func ) {
+	MRlib323.Rect.init(
+			this, left, top, width, height, styles, other, draw_func );
+} // end of Rect()
+
+/*doc: fe-e/engineers/javascript/mr-lib/rect-object.html */
+/** */
+MRlib323.Rect.init = function ( instance_ref,
+		left/*0*/, top/*0*/, width/*300*/, height/*50*/,
+		styles, other, draw_func ) {
+
+	/* idiom: x = foo ? foo || default;
+	foo, or, iff foo is undefined, default */
+
+	instance_ref.left =			left ? left : 0;
+	instance_ref.top =			top ? top : 0;
+	instance_ref.width =		width ? width: 300;
+	instance_ref.height =		height ? height: 50;
+	instance_ref.styles =		styles; // see Rect.draw() for default
+	instance_ref.other =		other;
+	instance_ref.draw_func =	draw_func;
+
+	function default_styles() {
+		return { background: '#f0f0ff', border: '1px solid black',
+		position: 'absolute' };
+	}
+
+} // end: Rect.init()
+
+/*doc: fe-e/engineers/javascript/mr-lib/rect-object.html */
+/** */
+MRlib323.Rect.prototype.draw = function ( parent ) {
+
+	if ( parent !== undefined ) { // may be div or Rect
+
+		if ( parent.div !== undefined ) { this.parent = parent.div; } // Rect
+		else { this.parent = parent; } // div
+
+	} else { this.parent = document.body; }
+
+	if ( this.styles === undefined ) {
+			this.styles = {
+					background: '#f0f0f0',
+					border:		'1px solid #e0e0e0',
+					position:	'absolute'
+			};
+	}
+
+	this.styles[ 'left' ]	= this.left + 'px';
+	this.styles[ 'top' ]	= this.top + 'px';
+	this.styles[ 'width' ]	= this.width + 'px';
+	this.styles[ 'height' ] = this.height + 'px';
+
+	if ( this.styles['position'] === undefined ) {
+			this.styles[ 'position' ] = 'absolute'; }
+
+	this.div = MRlib323.create_attached_element( this.parent, 'div', '',
+		this.styles, this.other );
+	if ( this.draw_func !== undefined ) { this.draw_func(); }
+
+	return this.div;
+
+} // end: Rect.draw()
+
+MRlib323.Rect.prototype.toString = function () {
+	return 'Rect{' +
+		'left=' + this.left +
+		',top=' + this.top +
+		',width=' + this.width +
+		',height=' + this.height +
+		( this.styles ? ',styles=' + MRlib323.to_string(this.styles) : '' ) +
+		( this.other  ? ',other=' + MRlib323.to_string(this.other) : '' ) +
+		( this.draw_func ? ',draw_func' : '' ) + '}';
+}
+
+/**A Table Class */
+
+	/**1 Table Instance Basics */
+
+/** Create a Table instance.
+Alternate arguments are:
+new Table( other_table );
+new Table( name, objects_list );
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table = function ( name, col_names, data ) {
+
+    if ( arguments.length === 1 ) { // copy a Table
+        var old_table = arguments[ 0 ],
+            name = old_table.name,
+            col_names = MRlib323.array_copy( old_table.col_names ),
+            data = MRlib323.array_2d_copy( old_table.data );
+    } else if ( arguments.length === 2 ) { // Table from object of instances
+
+/* The two-arg form converts an array of instances of a single class to
+a table. Given an array of Prisoners, [p0, p1, ...] where each Prisoner
+is {name: prisoner_name, rank: p_rank: sno: p_serial_no} it returns a
+table, column names: ['id', 'name', 'rank', 'sno'] and data:
+[
+    ['0', p0.name, p0.rank, p0.sno],
+    ['1', p1.name, p1.rank, p1.sno],
+    ...
+]
+*/
+        var name = arguments[ 0 ],
+            objects_list = arguments[ 1 ],
+            col_names = ['id'].concat( prop_names(objects_list) ),
+            data = data_arr( objects_list );
+
+    } // end: arguments.length === 2
+
+    // Constructor, 2- and 3-arg versions.
+    MRlib323.Table.init( this, name, col_names, data );
+
+    function prop_names( obj ) {
+        var props = [];
+        for ( var prop in obj ) { // get names from first object
+            var first_obj = obj[ prop ];
+            for ( var name in first_obj ) {
+                props.push( name );
+            }
+            break;
+        }
+        return props;
+    } // end: prop_names
+
+    function data_arr( obj ) {
+
+        var ret = [];
+
+        for ( var prop in obj ) {
+
+            var row = [ prop ];
+            for ( var name in obj[prop] ) {
+                row.push( obj[prop][name] );
+            }
+            ret.push( row );
+
+        } // end: for ( name in obj[prop] )
+        return ret;
+
+    } // end: for ( prop in obj )
+
+} // end: Table()
+
+/** Initialize a Table instance.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.init = function ( instance_ref, name, col_names, data ) {
+    instance_ref.name = name;
+    instance_ref.col_names = col_names;
+    instance_ref.data = data;
+} // end: Table.init()
+
+MRlib323.Table.prototype.toString = function () {
+
+    var ret = 'Table{' +
+        'name=' + this.name +
+        ',col_names=' + arr_wrap( this.col_names ) +
+        ',data=[';
+    for ( var i in this.data ) {
+        if ( i !== '0' ) { ret += ','; }
+        ret += arr_wrap( this.data[i] );
+    }
+    return ret + ']}';
+
+    function arr_wrap( array ) { return '[' + array + ']'; }
+
+} // end: Table.toString()
+
+	/**1 Table Instance Methods */
+
+/** Object from row.
+Column names become property names. Data become property values.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.get_object = function ( row_num ) {
+
+    var ret = {};
+    for ( var i in this.data[row_num] ) {
+        ret[ col_names[i] ] = this.data[ row_num ][ i ];
+    }
+
+    return ret;
+
+} // end: Table.get_object()
+
+/** Add a new column.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.insert_col = function ( index, name, value ) {
+	this.col_names.splice( index, 0, name );
+	for ( var i in this.data ) {
+		var row = this.data[ i ];
+		row.splice( index, 0, value );
+	}
+} // end: Table.insert_col()
+
+/** this.xxx_id = that.id.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.join = function ( detail_table, id_col_name ) {
+
+    var cnames = MRlib323.array_copy( this.col_names );
+    for ( var i in detail_table.col_names ) {
+        if ( i === '0' ) { continue; }
+        cnames.push( detail_table.name + '.' + detail_table.col_names[i] );
+    }
+
+    var data = [];
+    var join_col = MRlib323.array_index_of( this.col_names, id_col_name );
+    var join_data = detail_table.to_objects();
+    var no_join_filler = MRlib323.array_fill(
+            -1, detail_table.col_names.length - 1 );
+
+    for ( i in this.data ) {
+        var row = this.data[ i ];
+        var key = row[ join_col ];
+        var join_with = join_data[ key ];
+        if ( join_with ) {
+                join_with = MRlib323.object_props_to_array( join_with ); }
+        else { // or fill with N/A values
+                join_with = MRlib323.array_copy( no_join_filler ); }
+        data[ i ] = this.data[ i ].concat( join_with );
+    }
+
+    return new MRlib323.Table( this.name + '.' + detail_table.name,
+        cnames, data );
+
+} // end: Table.join()
+
+/** Sort order.
+For ascending sort:
+    order_by( name of column to be sorted )
+For descending sort:
+    order_by( name of column to be sorted, false )
+For custom sort:
+    order_by( name of column to be sorted, comparison_function ).
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.order_by = function ( col_name, func_or_updown ) {
+
+    var ascending = true,
+        datum_comp = MRlib323.compare_numbers_and_strings;
+
+    if ( func_or_updown !== undefined ) {
+        if ( typeof func_or_updown === 'function' ) {
+            datum_comp = func_or_updown;
+        } else if ( typeof func_or_updown === 'boolean' ) {
+            ascending = func_or_updown;
+        } else { throw "In Table.order_by(), " +
+                "invalid func_or_updown argument."; }
+    }
+
+    var col_index = MRlib323.array_index_of( this.col_names, col_name );
+    if ( col_index < 0 ) {
+            throw "In Table.order_by(), invalid column name: '" + col_name +
+            "' not in " + MRlib323.to_string( this.col_names ) + "' ."; }
+
+    var cnames = MRlib323.array_copy( this.col_names );
+    var data = MRlib323.array_2d_copy( this.data );
+    data.sort( row_comp );
+
+    return new MRlib323.Table( this.name, cnames, data );
+
+    function row_comp( a, b ) {
+        var ret = datum_comp(
+                a[col_index], b[col_index] );
+        return ascending ? ret : -ret;
+    }
+
+} // end: of Table.order_by()
+
+/** SQL-like SELECT.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.select = function ( col_names ) {
+
+/* 'col_names' may be '*" (all columns) or a single name or an array
+or 'arguments' may be a list of names. */
+
+    if ( col_names === '*' ) { return new MRlib323.Table( this ); }
+
+    var cnames = [];
+    if ( (typeof col_names === 'string') && (arguments.length === 1) ) {
+        cnames[ 0 ] = col_names; }
+    else if ( col_names instanceof Array ) { cnames = col_names; }
+    else if ( arguments.length > 1 ) {
+        for ( var i = 0, len = arguments.length; i < len; i += 1 ) {
+                cnames[ i ] = arguments[ i ]; }
+    } else { throw "In Table.select(), unknown 'col_names' argument."; }
+
+    var cols = MRlib323.array_indexes_of( this.col_names, cnames );
+    var data = MRlib323.array_2d_subscript( this.data, cols );
+
+    return new MRlib323.Table( this.name, cnames, data );
+
+} // end: Table.select()
+
+/** To object of objects.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.to_objects = function () {
+
+/* The whole Table becomes an object. Each first-column value becomes the
+name of a property. The value of each property is an object, as follows:
+
+cval0: { cname1: cval1, cname2: cval2, ... }
+
+If there are more column names than data values, the extra names become
+undefined properties. If there are more data values than column names,
+the extra data values are discarded. */
+
+    var ret = {};
+    for ( var i in this.data ) {
+
+        var obj = {};
+
+        for ( var j in this.col_names ) {
+            if ( j === '0' ) { continue; }
+            if ( this.data[i] ) {
+                obj[ this.col_names[j] ] = this.data[ i ][ j ];
+            } else { obj[ this.col_names[j] ] = undefined; }
+        }
+
+        ret[ this.data[i][0] ] = obj;
+
+    } // end: ( for i in data )
+
+    return ret;
+
+} // end: Table.to_objects
+
+/** Code to create table.
+
+Writes a space-indented, newline-separated (textarea compatible) source.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.to_code = function () {
+
+    var ret = '';
+        ret = 'new MRlib323.Table( "' + this.name + '",\n' +
+                '    ' + MRlib323.to_string( this.col_names ) + ',\n' +
+                '    [\n';
+
+    for ( var i in this.data ) {
+        if ( i > '0' ) { ret += ',\n'; }
+        ret += '        ' + MRlib323.to_string( this.data[i] );
+    }
+    ret += '\n    ]\n';
+
+    return ret + '\n);';
+
+} // end: Table.to_code()
+
+/** Build an HTML table.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.to_table = function ( parent, styles ) {
+	var new_table = this;
+
+	var id_suffix = '_dom_table';
+
+    if ( parent === undefined ) { parent = document.body; }
+    if ( typeof parent === 'string' ) {
+            parent = document.getElementById( parent ); }
+
+	if ( styles === undefined ) { styles =
+			{
+				background: 	'#e0eff8',
+				border: 		'3px solid #0080a0',
+			};
+	}
+
+	if ( styles.background === undefined ) { styles.background = '#e0eff8'; }
+	if ( styles.border === undefined ) { styles.border = '3px solid #0080a0'; }
+
+	if ( styles.captionStyles === undefined ) {
+			styles.captionStyles = { fontSize: '16pt', marginTop: '20px' };
+	}
+	if ( styles.rowStyles === undefined ) {
+			styles.rowStyles = { BGlight: '#ffffff', BGdark: '#e8eff8' };
+	}
+
+    var old_table = document.getElementById( new_table.name + id_suffix );
+    if ( old_table !== null ) {
+            MRlib323.detach_element( old_table + id_suffix ); }
+
+    var tbl = MRlib323.create_attached_element(
+			parent, 'table', new_table.name + id_suffix, styles
+	);
+        tbl.rules = 'all';
+        var cap = tbl.createCaption();
+            cap.innerHTML = new_table.name;
+            cap.style.fontSize = styles.captionStyles.fontSize;
+            cap.style.marginTop = styles.captionStyles.marginTop;
+
+        var r0 = tbl.insertRow( 0 );
+
+        for ( var i in new_table.col_names ) { // <th>s, top row
+            var cell = r0.insertCell( i );
+                cell.style.paddingLeft = cell.style.paddingRight = '5px';
+                cell.style.textAlign = 'center';
+                cell.style.fontWeight = 'bold';
+            cell.innerHTML = new_table.col_names[ i ];
+        }
+
+    for ( var j in new_table.data ) { // data
+        var row = tbl.insertRow( (+j) + 1 );
+            row.style.background = ( (+j) % 6 ) > 2 ?
+				 styles.rowStyles.BGlight : styles.rowStyles.BGdark ;
+
+        for ( i in new_table.data[j] ) {
+            cell = row.insertCell( i );
+            var datum = new_table.data[ j ][ i ];
+
+            if ( (typeof datum === 'string') &&
+                 (new_table.col_names[ i ].indexOf( 'URL' ) >= 0) ) {
+                cell.innerHTML = '<a href="' + datum + '">' + datum + '</a>';
+            } else { cell.innerHTML = datum; }
+
+            if ( typeof datum === 'number' ) { cell.align = 'right'; }
+        } // end: for i in data[j]
+
+    } // end: for j in data
+
+    new_table.dom_table = tbl;
+
+    return new_table;
+
+} // end: Table.to_table()
+
+/** Float the table to the left. */
+MRlib323.Table.prototype.to_table_left = function ( parent, styles ) {
+	var table_ref = this;
+
+	if ( styles ) { styles.cssFloat = 'left'; styles.marginLeft = '10px'; }
+	else { styles = { cssFloat: 'left', marginLeft: '10px' }; }
+
+	var table = table_ref.to_table( parent, styles );
+
+	return table;
+
+} // end: to_table_left()
+
+/** Select rows.
+doc: fe-e/engineers/javascript/mr-lib/classes/table-class.html */
+MRlib323.Table.prototype.where = function ( comp_str ) {
+
+/* Returns table where comparison is true (like a SQL WHERE clause).
+
+comp_str = 'col_name op value' where
+    col_name - the name of a column in the table
+    op       - one of '<', '<=', '=', '>=', '>', '!=', '<>' or 'asw'
+    value    - a number or string
+
+'asw' === 'array starts with'
+*/
+
+    var ops = [ '<', '<=', '=', '>=', '>', '!=', 'asw' ];
+    var funcs = [
+        function (cell, value) { return cell <   value; },
+        function (cell, value) { return cell <=  value; },
+        function (cell, value) { return cell ==  value; },
+        function (cell, value) { return cell >=  value; },
+        function (cell, value) { return cell >   value; },
+        function (cell, value) { return cell !=  value; },
+		function (cell, value) {
+				return MRlib323.array_starts_with( cell, value ) }
+    ];
+
+    var comp_results = compile( this, comp_str );
+    var col = comp_results[0],
+        op  = comp_results[1],
+        val = comp_results[2];
+
+    var cnames = MRlib323.array_copy( this.col_names );
+    var data = [];
+
+    for ( var i in this.data ) {
+
+        var cell = this.data[ i ][ col ];
+        if ( typeof cell === 'string' ) { cell = MRlib323.trim( cell ); }
+        if ( funcs[op](cell, val) ) {
+            data.push( this.data[i] );
+        }
+    } // end: for( i in this.data )
+
+    return new MRlib323.Table( this.name, cnames, data );
+
+    function compile( table, comp_str ) {
+
+        var op = get_op( comp_str );
+		var is_asw = comp_str.indexOf('asw') > -1;
+
+        if ( ! op ) { throw "In Table.where(), comp_str has no operator."; }
+
+        var name_value = comp_str.split( ops[op] );
+        var name = MRlib323.trim( name_value[0] );
+        var col = MRlib323.array_index_of( table.col_names, name );
+        if ( col < 0 ) { throw "In Table.where(), no such column name."; }
+
+        var value = MRlib323.trim( name_value[1] );
+        if ( value.length < 1 ) { throw "In Table.where(), no value."; }
+		if ( is_asw && (typeof value === 'string') ) {
+			// Just do this eval() once.
+			eval( '(value=' + value + ');' );
+		}
+
+        return [ col, op, value ];
+
+        function get_op( comp_str ) {
+
+            if ( comp_str.indexOf('<=') > -1 ) { return 1; }
+            if ( comp_str.indexOf('>=') > -1 ) { return 3; }
+            if ( comp_str.indexOf('!=') > -1 ) { return 5; }
+            if ( comp_str.indexOf('<>') > -1 ) { return 5; }
+            if ( comp_str.indexOf('<')  > -1 ) { return 0; }
+            if ( comp_str.indexOf('>')  > -1 ) { return 4; }
+            if ( comp_str.indexOf('=')  > -1 ) { return 2; }
+			if ( comp_str.indexOf('asw')> -1 ) { return 6; }
+            return undefined;
+
+        }
+
+    } // end: compile()
+
+} // end: Table.where()
+
+	/**A Thread Class */
+
+/**
+Doc: fe-e/engineers/javascript/mr-lib/thread-class.html */
+MRlib323.Thread = function ( runnable ) {
+	MRlib323.Thread.init( this, runnable );
+} // end: Thread()
+
+/**
+Doc: fe-e/engineers/javascript/mr-lib/thread-class.html */
+MRlib323.Thread.init = function ( instance_ref, runnable ) {
+
+	instance_ref.runnable		= runnable;
+	instance_ref.millis			= 0;
+	instance_ref.runs_remaining	= -1;
+	instance_ref.started		= false;
+
+} // end: Thread.init()
+
+/** Pause execution.
+Doc: fe-e/engineers/javascript/mr-lib/thread-class.html */
+MRlib323.Thread.prototype.sleep = function ( sleep_millis ) {
+	var thread = this;
+	thread.stop();
+	setTimeout( function() { thread.start(); }, sleep_millis );
+}
+
+/** Run a thread once [or periodically]	[or for N runs].
+Doc: fe-e/engineers/javascript/mr-lib/thread-class.html */
+MRlib323.Thread.prototype.start = function ( millis, runs ) {
+
+	if ( ! this.started ) {
+		if ( runs !== undefined ) { this.runs_remaining = runs; }
+		else { this.runs_remaining = -1; }
+
+		if ( millis !== undefined ) {
+			this.millis = millis; }
+
+		this.started = true;
+	}
+
+	if ( this.runs_remaining === 0 ) {
+		this.runs_remaining === -1;
+		// -1 runs 'forever' the next time it's start()ed
+
+		this.started = false;
+		return; // stops thread()
+	}
+	this.runs_remaining -= 1;
+
+	this.runnable.run(); // do it now
+
+	if ( this.millis > 0 ) { // and, maybe, do it some more
+		var thread = this;
+		var go = function () { thread.start(); }
+		setTimeout( go, this.millis );
+	}
+
+} // end: Thread.start()
+
+/** Stop, or # runs before stop.
+No arg? Kills thread at next call to start().
+An arg? Sets the number of remaining times to start().
+Doc: fe-e/engineers/javascript/mr-lib/thread-class.html */
+MRlib323.Thread.prototype.stop = function ( arg ) {
+	if ( arg === undefined ) { arg = 0; }
+	this.runs_remaining = arg;
+} // end: Thread.stop()
+
+MRlib323.Thread.prototype.toString = function () {
+	return 'Thread{' +
+		'runnable.run=' + this.runnable.run +
+		',millis=' + this.millis +
+		',remaining=' + this.runs_remaining +
+	'}';
+}
+
+// alert( 'mr-lib323.js loaded' );
+
+/* end of support/js/mr-lib323.js */

@@ -1,0 +1,1079 @@
+/* support/js/mr-frame324.js - Page framework #2, MartinRinehart.com
+Copyright 2012, Martin Rinehart */
+
+"use strict";
+
+/* Table of Contents
+  66 I. Data
+  72     A. The global.
+  75     B. Default medallion img.
+  80     C. Registered DOM element ids.
+  83     D. Colors, default.
+  98     E. Colors, assignments.
+ 109     F. Device size range.
+ 113     G. Install customizations, if any.
+ 117     H. The divs ('content', 'nav' and 'columnable'.
+ 136     I. Default sizes.
+ 144     J. Default styles.
+ 185     K. Default methods.
+ 207 II. Attach DOM Elements
+ 209     A. MRview323.build() Create DOM elements.
+ 212     B. Document Body
+ 218     C. Logo
+ 220         1. Logo
+ 233         2. Float Background
+ 247     D. Nav
+ 254     E. Medallion
+ 255         1. Medallion
+ 280         2. Float Background
+ 294     F. Content
+ 298 III. Layout
+ 300     A. MRview323.layout() (Re)Size Everything
+ 388     B. Document Body
+ 399     C. Logo
+ 400         1. Logo
+ 446         2. Float Background
+ 450     D. Medallion
+ 452         1. Medallion
+ 467         2. Float Background
+ 472     E. Content Div
+ 476     F. Nav Div
+ 588 IV. Classes
+ 590     A. Menu-Related Classes
+ 592         1. MenuItem
+ 594             a) MRview323.MenuItem()
+ 614             b) MRview323.MenuItem.prototype.draw()
+ 622             c) MRview323.MenuItem.prototype.resize()
+ 640             d) MRview323.MenuItem.prototype.toString()
+ 645         2. Menu
+ 647             a) MRview323.Menu()
+ 685             b) MRview323.Menu.prototype.draw()
+ 694             c) MRview323.Menu.prototype.lolite_all() 'mouseout' all
+                                                            non-punched items.
+ 708             d) MRview323.Menu.prototype.resize()
+ 736             e) MRview323.Menu.prototype.toString()
+ 748         3. MenuSet
+ 750             a) MRview323.MenuSet()
+ 787             b) MRview323.MenuSet.prototype.draw()
+ 792             c) MRview323.MenuSet.prototype.resize()
+ 807             d) MRview323.MenuSet.prototype.toString()
+ 817 V. Controller
+ 819     A. MRview323.launch_resize() Resize controller.
+ 836     B. window.onresize - Future paints? On resize.
+ 839 VI. On Load
+*/
+
+/**I Data */
+
+    /* Note: a page that loads this file may define MRview323, or
+    MRview323.medallion_img_src or MRview323.site_customize() - any of
+    these can be used to override the defaults in this file. */
+
+/**A The global. */
+    if ( window.MRview323 === undefined ) { var MRview323 = {}; }
+
+/**A Default medallion img. */
+    if ( MRview323.medallion_img_src === undefined ) {
+            MRview323.medallion_img_src =
+            'support/graphics/medallion-fe-e-4020e0.png'; }
+
+/**A Registered DOM element ids. */
+	MRview323.elements = {};
+
+/**A Colors, default. */
+	MRview323.default_colors = [
+		[ 'background',		'#e8e4e0' ],
+		[ 'logo_dark',		'#4020e0' ],
+		[ 'accent',			'#00fcf8' ],
+		[ 'offwhite',		'#e8e4e0' /*'#fffcf8'*/ ],
+		[ 'black',			'#000000' ]
+	];
+/* Note re above edit: color of selected menu item was too near color of
+other menu items. You couldn't really be sure about the breadcrumb path. */
+
+	for ( var i in MRview323.default_colors ) {
+		var color_pair = MRview323.default_colors[ i ];
+		if ( MRview323['COLOR_' + color_pair[ 0 ]] === undefined ) {
+				MRview323[ 'COLOR_' + color_pair[0] ] = color_pair[1]; }
+	} // end: assign default colors, if req'd
+
+/**A Colors, assignments. */
+	MRview323.COLOR = {
+		content:		MRview323.COLOR_offwhite,
+		logo_bottom:	MRview323.COLOR_accent,
+		logo_top:		MRview323.COLOR_logo_dark,
+		M:				MRview323.COLOR_offwhite,
+		nav:			MRview323.COLOR_offwhite,
+		R:				MRview323.COLOR_logo_dark,
+		text:			MRview323.COLOR_black
+	};
+
+/**A Device size range. */
+    MRview323.device_min_width = 176; // pixels
+    MRview323.device_max_width = 640;
+
+/**A Install customizations, if any. */
+    if ( MRview323.site_customize ) { MRview323.site_customize(); }
+	if ( MRview323.menu_customize ) { MRview323.menu_customize(); }
+
+/**A The divs ('content', 'nav' and 'columnable'. */
+    MRview323.divs = {};
+    MRview323.divs.content = document.getElementById( 'content' );
+
+	// 'content' div not in markup? Fake it.
+    if ( MRview323.divs.content === null ) {
+        MRview323.divs.content = document.createElement( 'div' );
+        MRview323.divs.content.id = 'content';
+		document.body.appendChild( MRview323.divs.content );
+    }
+
+	MRview323.divs.nav = document.createElement( 'div' );
+		MRview323.divs.nav.id = 'nav';
+
+	MRview323.columnable_divs =  MRlib323.get_elements_by_class_name(
+			document.body, 'columnable' );
+
+/**A Default sizes. */
+	MRview323.sizes = {
+		menu_height:	19,
+		menu_width:		99, // placeholder prior to 'layout()'
+		menu_hspace:	 2,
+		menu_vspace:	 0
+	};
+
+/**A Default styles. */
+	MRview323.styles = {
+		menu_styles: {
+			background:		MRview323.COLOR.nav,
+			fontSize:		'8pt',
+			padding:		'1px',
+			position:		'absolute'
+		},
+
+		button_styles: {
+			background:		MRview323.COLOR.nav,
+			borderRadius:	'5px',
+			marginLeft:		'2px',
+			overflow:		'hidden',
+			padding:		'0px',
+			position:		'absolute',
+			textAlign:		'center',
+			textDecoration: 'none',
+			whiteSpace:		'nowrap'
+		},
+
+		button_styles_mouseover: {
+			background:		'white',
+			cursor:			'pointer'
+		},
+
+		button_styles_mouseout: {
+			background:		MRview323.COLOR.nav,
+			cursor:			'default'
+		},
+
+		button_styles_punched: {
+			background: 'white',
+			border: '2px inset #a8a4a0'
+		},
+ 		button_styles_unpunched: {
+			background: MRview323.COLOR.nav,
+			border: '2px outset #a8a4a0'
+		}
+	};
+
+/**A Default methods. */
+	MRview323.methods = {
+		mouseover:	function () {
+			var menu_item = MRview323.elements[this.id],
+				menu = menu_item.menu;
+			menu.lolite_all();
+			this.style.background =
+					MRview323.styles.button_styles_mouseover.background;
+			this.style.cursor =
+					MRview323.styles.button_styles_mouseover.cursor;
+		},
+
+		mouseout:	function () {
+			var menu_item = MRview323.elements[this.id];
+			this.style.background = menu_item.is_selected ?
+					MRview323.styles.button_styles_mouseover.background :
+					MRview323.styles.button_styles_mouseout.background;
+			this.style.cursor =
+					MRview323.styles.button_styles_mouseout.cursor;
+		}
+	};
+
+/**I Attach DOM Elements */
+
+/** Create DOM elements. */
+MRview323.build = function () {
+
+    /**A Document Body */
+    document.body.style.backgroundColor = MRview323.COLOR_background;
+    document.body.style.fontFamily = 'sans-serif';
+
+    var margin_opacity = 0.2;
+
+    /**A Logo */
+
+        /**1 Logo */
+        MRview323.divs.logo = document.createElement( 'div' );
+            var div = MRview323.divs.logo;
+            div.id = 'logo';
+            div.style.backgroundColor = 'blue';// MRview323.COLOR_background;
+
+            div.style.position = 'absolute';
+			div.title = 'Martin Rinehart.com - ' +
+					'home away from home for overworked frontend engineers';
+            div.onmouseover = function () { this.style.cursor = 'pointer'; };
+            div.onmouseout = function () { this.style.cursor = 'default' };
+
+		/**1 Float Background */
+        MRview323.divs.logo_bg = document.createElement( 'div' );
+            MRview323.divs.logo_bg.id = 'logo_bg';
+            MRview323.divs.logo_bg.style.backgroundColor =
+					MRview323.COLOR.content;
+            MRview323.divs.logo_bg.style.cssFloat = 'left';
+            MRview323.divs.logo_bg.style.styleFloat = 'left'; // MSIE bull
+            // In case the content isn't as tall as the logo:
+            MRlib323.set_opacity( MRview323.divs.logo_bg, margin_opacity );
+
+    /**A Nav */
+		MRview323.divs.nav.style.backgroundColor = MRview323.COLOR.nav;
+		MRview323.divs.nav.style.position = 'absolute';
+		MRview323.menu_set = new MRview323.MenuSet(
+				MRdata323.get_current_page_menu_data_list() );
+		MRview323.menu_set.draw( MRview323.divs.nav );
+
+	/**A Medallion */
+		/**1 Medallion */
+		MRview323.divs.med = document.createElement( 'div' );
+			MRview323.divs.med.id = 'med';
+			MRview323.divs.med.style.backgroundColor =
+					MRview323.COLOR_accent;
+			MRview323.divs.med.style.position = 'absolute';
+			MRview323.divs.med.style.borderLeftStyle = 'solid';
+			MRview323.divs.med.style.borderLeftColor =
+					MRview323.COLOR_background;
+			MRview323.divs.med.style.borderBottomStyle = 'solid';
+			MRview323.divs.med.style.borderBottomColor =
+					MRview323.COLOR_background;
+
+			var img = document.createElement( 'img' );
+				img.id = 'med_img';
+				img.alt = 'Rotated text reading "Frontend Engineering".';
+				img.border = 0;
+				img.src = MRview323.medallion_img_src;
+				img.title = 'Your source for frontend engineering.';
+				img.style.position = 'absolute';
+				MRview323.divs.med.appendChild( img );
+
+		/**1 Float Background */
+		MRview323.divs.med_bg = document.createElement( 'div' );
+			MRview323.divs.med_bg.id = 'med_bg';
+			MRview323.divs.med_bg.style.backgroundColor =
+					MRview323.COLOR.content;
+			// In case the content isn't as tall as the medallion:
+			MRlib323.set_opacity( MRview323.divs.med_bg, margin_opacity );
+			MRview323.divs.med_bg.style.cssFloat = 'right';
+			MRview323.divs.med_bg.style.styleFloat = 'right'; // MSIE bull
+
+	/**A Attach */
+
+		/* Stacking order: nav, logo_bg, logo, med_bg, med, content
+		'content' is in DOM, from markup. */
+
+		ins_b4( 'med',		'content' );
+		ins_b4( 'med_bg',	'med' );
+		ins_b4( 'logo',		'med_bg' );
+		ins_b4( 'logo_bg',	'logo' );
+		ins_b4( 'nav',		'logo_bg' );
+
+		function ins_b4( new_elem, existing_elem ) {
+			document.body.insertBefore(
+				MRview323.divs[new_elem], MRview323.divs[existing_elem] );
+		}
+
+} // end: build()
+
+/**I Layout */
+
+/** (Re)Size Everything */
+MRview323.layout = function () {
+
+    /* The 'window_width' is the actual browser window size. The 'size'
+    may be greater (if the 'window_width' is less than the design min) or less
+    (if the 'window_width' is greater than the design max). */
+    var window_width = MRlib323.window_size().width,
+        size = window_width;
+
+    if ( window_width === 0 ) { return 100; }
+        // MSIE kludge, retry in 100 millis
+
+// alert( 'frame layout(): window_width = ' + window_width );
+
+    var min = MRview323.device_min_width,
+        max = MRview323.device_max_width;
+    if ( window_width < min ) { size = min; }
+    else if ( window_width > max ) { size = max; }
+
+	if ( window_width > 1200 ) { layout_cols( 3 ); }
+	else  if ( window_width > 800 ) { layout_cols( 2 ); }
+	else { layout_cols( 1 ); }
+
+    /* Self: the "M" and "R" positions are for the bounding divs, not for
+    the letters themselves. */
+
+	/* Order:
+right margin? need to know if has vertical scrollbar
+vertical scrollbar? need to know top margin
+top margin? Need to know margin + menu + last update heights */
+
+    var round = Math.round;
+
+	var lup_height = 16,
+        nav_height = ( MRview323.menu_set.menus.length *
+				(MRview323.sizes.menu_height +
+				 MRview323.sizes.menu_vspace) ) + lup_height,
+		body_margin_left  = round( (size *  0.0388) + -4.8276 ), // 20 to 2
+		body_margin_top   = body_margin_left + nav_height;
+
+		document.body.style.marginTop = body_margin_top + 'px';
+
+	// Elevator, right side, is 17 pix wide. Embed in margin if present.
+	var elevator_width = has_elevator() ? 17 : 0;
+	var body_margin_right =
+			Math.max( body_margin_left - elevator_width, 1 );
+
+    var font_size    = round( (size *  0.0065) +  6.8621 ), // 11 to 8
+        font_size_h1 = round( (size *  0.0388) +  7.1724 ), // 32 to 14
+        font_size_h2 = round( (size *  0.0259) +  7.4483 ), // 24 to 12
+        font_size_h3 = round( (size *  0.0216) +  6.2069 ), // 20 to 10
+        font_size_h4 = round( (size *  0.0172) +  4.9655 ), // 16 to 8
+
+        logo_margin  = round( (size *  0.0172) + -1.0345 ), //  10 to  2
+		logo_border  = logo_margin,
+        logo_size    = round( (size *  0.1897) + -1.3793 ), // 120 to 32
+        logo_letter  = round( (size *  0.1616) + -3.4483 ), // 100 to 25
+        logo_m_left  = round( (size *  0.0194) + -1.4138 ), //  11 to  2
+        logo_m_top   = round( (size *  0.0065) + -1.1379 ), //   3 to  0
+        logo_r_left  = round( (size *  0.0560) +  2.1379 ), //  38 to 12
+        logo_r_top   = round( (size *  0.0194) +  2.5862 ), //  15 to  6
+
+		// med_ is the medallion (top-right corner)
+        med_border_width = logo_margin,
+        med_bradius  = round( (size *  0.0216) +  6.2069 ), // 20 to 10
+        med_margin   = logo_margin,
+        med_padding  = logo_margin,
+
+        med_img_margin = logo_margin,
+        med_img_height = round( (size * 0.4138) + 119.1724 ), // 384 to 192
+        med_img_right = med_img_margin,
+        med_img_top = med_img_margin,
+        med_img_width  =  round( (size * 0.0474) + 13.6552 ), // 44 to 22
+
+        med_height = med_img_height + ( 2 * med_img_margin ),
+        med_width = med_img_width + ( 2 * med_img_margin ),
+
+        nav_width = window_width -
+                ( body_margin_left + body_margin_right ) - logo_size -
+				med_width - med_border_width,
+		content_padding = logo_margin;
+
+	var half_logo_border = round( logo_border / 2 );
+		logo_m_left -= half_logo_border; // later addition: logo border
+		logo_m_top  -= logo_border;
+		logo_r_left -= half_logo_border;
+		logo_r_top  -= logo_border;
+
+    /**A Document Body */
+
+		document.body.style.marginLeft = body_margin_left + 'px';
+		document.body.style.marginRight =  body_margin_right + 'px';
+		document.body.style.fontSize = font_size + 'pt';
+		style_font_size( 'h1', font_size_h1 );
+		style_font_size( 'h2', font_size_h2 );
+		style_font_size( 'h3', font_size_h3 );
+		style_font_size( 'h4', font_size_h4 );
+		style_heading_margins();
+
+    /**A Logo */
+        /**1 Logo */
+
+        // first, clear it out
+        MRlib323.remove_children( MRview323.divs.logo );
+
+        // then lay out the div
+        set_ltwh( MRview323.divs.logo, body_margin_left, body_margin_left,
+                logo_size - logo_border, logo_size - logo_border );
+		MRview323.divs.logo.style.borderRight =
+				'' + logo_border + 'px solid ' + MRview323.COLOR_background;
+		MRview323.divs.logo.style.borderBottom =
+				'' + logo_border + 'px solid ' + MRview323.COLOR_background;
+		MRview323.divs.logo.style.borderRadius =
+				'0 0 ' + logo_border + 'px 0';
+
+        // slap on a coat of gradient paint
+        MRview323.divs.logo.vg =
+                new MRlib323.VGradient( MRview323.divs.logo, 0, 0,
+                logo_size - logo_border, logo_size - logo_border,
+                MRview323.COLOR.logo_top, MRview323.COLOR.logo_bottom );
+
+		// add an M and an R
+        MRlib323.detach_element_by_id( 'the_logo_m' );
+        MRlib323.detach_element_by_id( 'the_logo_r' );
+
+        var m = MRlib323.create_element( 'div', 'the_logo_m',
+            {fontFamily: 'Arial, sans-serif',
+            fontSize: logo_letter + 'px',
+            fontWeight: 700,
+            left: logo_m_left + 'px',
+            top:  logo_m_top + 'px',
+            position: 'absolute',
+            color: MRview323.COLOR.M},
+            {innerHTML: 'M'} );
+        MRview323.divs.logo.appendChild( m );
+
+        var r = MRlib323.create_element( 'div', 'the_logo_r',
+            {fontFamily: 'Arial, sans-serif',
+            fontSize: logo_letter + 'px',
+            fontWeight: 700,
+            left: logo_r_left + 'px',
+            top:  logo_r_top + 'px',
+            position: 'absolute', color: MRview323.COLOR.R},
+            {innerHTML: 'R'} );
+        MRview323.divs.logo.appendChild( r );
+
+        /**1 Float Background */
+        set_ltwh( MRview323.divs.logo_bg, 0, 0, logo_size + logo_margin,
+                logo_size - nav_height + logo_margin );
+
+    /**A Medallion */
+
+        /**1 Medallion */
+
+		// Note: body top margin includes menu height, using left.
+        set_rtwh( MRview323.divs.med, body_margin_right, body_margin_left,
+            med_width, med_height );
+
+        MRview323.divs.med.style.borderLeftWidth = med_border_width + 'px';
+        MRview323.divs.med.style.borderBottomWidth = med_border_width + 'px';
+        MRview323.divs.med.style.borderRadius = '0 0 0 ' + med_bradius + 'px';
+        var med_img = document.getElementById( 'med_img' );
+            med_img.style.height = med_img_height + 'px';
+            med_img.style.right  = med_img_right + 'px';
+            med_img.style.top    = med_img_top + 'px';
+            med_img.style.width  = med_img_width + 'px';
+
+        /**1 Float Background */
+        set_rtwh( MRview323.divs.med_bg, 0, 0,
+                med_width + med_border_width + med_margin,
+                med_height + med_border_width - nav_height /*+ med_margin*/ );
+
+    /**A Content Div */
+    MRview323.divs.content.style.padding = content_padding + 'px';
+    MRview323.divs.content.style.paddingLeft = 20 + 'px';
+
+    /**A Nav Div */
+
+        nav_width = document.body.offsetWidth - // remainder inside margins
+            logo_size - med_width - med_border_width;
+
+        // Style the 'nav' div. Use left margin for top.
+		MRview323.sizes.menu_width = nav_width -
+				( 2 * MRview323.sizes.menu_hspace ) -
+				( 17 * will_grow_tall() );
+        set_ltwh( MRview323.divs.nav, body_margin_left + logo_size,
+				body_margin_left, nav_width, nav_height );
+		MRview323.menu_set.resize();
+
+        var lup = MRlib323.date2dd_Mon_yyyy(
+                new Date(document.lastModified) );
+
+		var lup_span = document.getElementById( 'lup_span' );
+		if ( lup_span === null ) {
+			lup_span = MRlib323.create_attached_element(
+					MRview323.divs.nav, 'span', 'lup_span',
+					{fontSize: '8pt',
+					fontWeight: 'normal',
+					position: 'absolute',
+					right: MRview323.sizes.menu_hspace + 12 + 'px',
+					top: nav_height - lup_height + 'px',
+					color: MRview323.COLOR.text},
+					{innerHTML:
+		'<span id="next_func_label"' +
+				' style="cursor: pointer;">' +
+				' <sup>next</sup></span>' +
+		' MartinRinehart.com: ' + lup}
+			);
+		} else { MRlib323.style_an_element( lup_span, {
+				right: MRview323.sizes.menu_hspace + 2 + 'px',
+				top: nav_height - lup_height + 'px'} ); }
+
+	function has_elevator() {
+
+		var fudge = 100; // allow for extra added during layout
+		return will_grow_tall() ||
+				( window_height() < (document_height() + fudge) );
+
+		function window_height() {
+			if ( window.innerHeight ) { return window.innerHeight; }
+			return document.documentElement.clientHeight;
+		}
+		function document_height() { return document.body.clientHeight; }
+
+	} // end: has_elevator()
+
+	// Kludge. Some pages call JS to add content after layout().
+	function will_grow_tall() {
+			return document.getElementById( 'will_grow_tall' ) !== null; }
+
+    function set_ltwh( element, left, top, wid, hgt ) {
+		hgt = Math.max( hgt, 1 ); // MSIE bug workaround
+        element.style.left   = left + 'px';
+        element.style.top    = top + 'px';
+        element.style.width  = wid + 'px';
+        element.style.height = hgt + 'px';
+    } // end: set_ltwh()
+
+    function set_rtwh( element, right, top, wid, hgt ) {
+		hgt = Math.max( hgt, 1 ); // MSIE bug workaround
+        element.style.right  = right + 'px';
+        element.style.top    = top + 'px';
+        element.style.width  = wid + 'px';
+        element.style.height = hgt + 'px';
+    } // end: set_rtwh()
+
+    function style_font_size( tag, size ) {
+
+        var elements = document.getElementsByTagName( tag );
+        for ( var i = 0; i < elements.length; i += 1 ) {
+            elements[ i ].style.fontSize = size + 'pt';
+			elements[ i ].style.lineHeight = ( size * 1.2 ) + 'pt';
+        }
+
+    } // end: style_font_size()
+
+	// Exdent headings.
+	function style_heading_margins() {
+
+		var heading_tags = [ 'h1', 'h2' ]; // leave h3, h4 indented
+		for ( var i in heading_tags ) {
+			var tags = document.getElementsByTagName( heading_tags[i] );
+			for ( var j = 0; j < tags.length; j += 1 ) {
+					tags[ j ].style.marginLeft = '-18px'; }
+		}
+
+	} // end: style_heading_margins()
+
+	function layout_cols( ncols) {
+
+		if ( MRview323.columnable_divs === undefined ) { return; }
+
+		var gap = '32px';
+
+		for ( var i in MRview323.columnable_divs ) {
+			var div = MRview323.columnable_divs[ i ];
+
+			div.style.columnCount = ncols;
+			div.style.MozColumnCount = ncols;
+			div.style.WebkitColumnCount = ncols;
+
+			/* div.style.columnGap = gap;
+			div.style.MozColumnGap = gap;
+			div.style.WebkitColumnGap = gap; */
+
+			div.style.marginBottom = '1em';
+		}
+
+	} // end: layout_cols()
+
+} // end: layout()
+
+/**I Classes */
+
+/**A Menu-Related Classes */
+
+/**1 MenuItem */
+
+/** */
+MRview323.MenuItem = function (
+		menu, is_selected, node, left, top, width, height, styles ) {
+
+	this.menu = menu;
+	this.is_selected = is_selected;
+	this.node = node; // a MenuTreeNode object
+	this.other = {
+			innerHTML: node.topic,
+			title: node.tooltip,
+			onmouseover: MRview323.methods.mouseover,
+			onmouseout: MRview323.methods.mouseout,
+			href: 	MRdata323.home +
+					MRdata323.expand_path( node.pathname ) + '.html'
+	};
+	this.delem = new MRlib323.Delem( 'a', node.pathname,
+			left, top, width, height, styles, this.other );
+	MRview323.elements[ node.pathname ] = this;
+}
+
+/** */
+MRview323.MenuItem.prototype.draw = function ( parent ) {
+// alert( 'drawing item ' + this.topic );
+	var menu_item = this;
+	var delem = menu_item.delem;
+	delem.draw( parent );
+} // end: MenuItem.draw()
+
+/** */
+MRview323.MenuItem.prototype.resize = function ( left, top, width, height ) {
+
+	var item = this,
+		elem = item.delem.elem;
+
+	elem.left = left;
+	elem.top = top;
+	elem.width = width;
+	elem.height = height;
+
+	elem.style.left = left + 'px';
+	elem.style.top = top + 'px';
+	elem.style.width = width + 'px';
+	elem.style.height = height + 'px';
+
+} // end: MenuItem.resize()
+
+/** */
+MRview323.MenuItem.prototype.toString = function () {
+		return 'MenuItem{node=' + this.node +
+		',delem=' + this.delem + '}'; } // */
+
+/**1 Menu */
+
+/** */
+MRview323.Menu = function ( menu_data, left, top, width, height ) {
+
+	this.menu_data = menu_data; // a MenuData object
+	this.selected = menu_data.selected;
+	this.nodes = menu_data.menu_tree_nodes; // array of MenuTreeNode objects
+	this.items = [];
+
+	this.styles = MRview323.styles.menu_styles;
+
+	this.delem = new MRlib323.Delem( 'div', '',
+			left, top, width, height, this.styles );
+
+	// 'width - 2' to allow margin, right end
+	var item_width = ( width - 2 ) / this.nodes.length;
+
+	// menu_data is an array of MenuTreeNode objects plus a 'selected' number
+	for ( var i in menu_data.menu_tree_nodes ) {
+		var node = menu_data.menu_tree_nodes[ i ];
+		var left = ( +i ) * item_width;
+		var top = 0;
+		var width = item_width - 4;
+		var height = MRview323.sizes.menu_height - 5;
+		var styles = MRview323.styles.button_styles;
+
+		var border_style;
+		var is_sel = ( (+i) === this.selected );
+		if ( is_sel ) {
+			border_style = MRview323.styles.button_styles_punched;
+		} else {  border_style = MRview323.styles.button_styles_unpunched; }
+		for ( var prop in border_style ) {
+				styles[ prop ] = border_style[ prop ]; }
+		this.items[ i ] = new MRview323.MenuItem( this, is_sel, node,
+				left, top, width, height, styles );
+	}
+
+} // end: Menu()
+
+/** */
+MRview323.Menu.prototype.draw = function( parent ) {
+	this.delem.draw( parent );
+	for ( var i in this.items ) {
+		var item = this.items[ i ];
+			item.draw( this.delem.div );
+	}
+} // */
+
+/** 'mouseout' all non-punched items. */
+MRview323.Menu.prototype.lolite_all = function () {
+
+	var menu = this;
+	for ( var i in menu.items ) {
+		var menu_item = menu.items[ i ];
+		if ( (+i) !== menu.selected ) {
+			menu_item.delem.elem.style.background =
+					MRview323.styles.button_styles_mouseout.background;
+		}
+	}
+
+} // end: Menu.lolite_all()
+
+/** */
+MRview323.Menu.prototype.resize = function( left, top, width, height ) {
+
+	var menu = this,
+		div = menu.delem.div;
+	div.left = left;
+	div.top = top;
+	div.width = width;
+	div.height = height;
+
+	div.style.left = left + 'px';
+	div.style.top = top + 'px';
+	div.style.width = width + 'px';
+	div.style.height = height + 'px';
+
+	var item_width = ( width - 2 ) / this.nodes.length;
+
+	for ( var i in menu.menu_data.menu_tree_nodes ) {
+		var node = menu.menu_data.menu_tree_nodes[ i ];
+		var left = ( +i ) * item_width;
+		var top = 0;
+		var width = item_width - 4;
+		var height = MRview323.sizes.menu_height - 5;
+		menu.items[ i ].resize( left, top, width, height );
+	}
+
+} // end: Menu.resize()
+
+/** */
+MRview323.Menu.prototype.toString = function () {
+	var ret = 'Menu{[';
+	var topics = [];
+	for ( var i in this.nodes ) {
+		topics[ i ] = this.nodes[ i ].topic;
+	}
+	ret += topics.join( ',' ) + '][' + this.selected + ']}';
+	return ret;
+
+} // end Menu.toString()
+
+/**1 MenuSet */
+
+/** */
+MRview323.MenuSet = function ( menu_list ) {
+
+	// menu_list = array of MenuData objects
+	menu_list = combine_home_and_next( menu_list );
+
+	var left = 5,
+		top = 5,
+		width = MRview323.sizes.menu_width,
+		height = MRview323.sizes.menu_height;
+
+	this.menu_list = menu_list;
+	this.menus = [];
+
+	for ( var i in menu_list ) {
+		var menu_data = menu_list[ i ];
+		this.menus[ i ] = new MRview323.Menu( menu_data,
+				left, top, width, height );
+		top += height + 3;
+	}
+
+	function combine_home_and_next( menu_list ) {
+
+		var home = menu_list[0];
+		var next = menu_list[1];
+		menu_list = menu_list.slice( 1 ); // cut off home
+
+		next.selected += 1;
+		next.menu_tree_nodes =
+				home.menu_tree_nodes.concat( next.menu_tree_nodes );
+
+		return menu_list;
+
+	} // end: combine_home_and_next()
+
+} // end: MenuSet()
+
+/** */
+MRview323.MenuSet.prototype.draw = function ( parent ) {
+	for ( var i in this.menus ) { this.menus[ i ].draw( parent ); }
+}
+
+/** */
+MRview323.MenuSet.prototype.resize = function () {
+
+	var left = 1, // MRview323.sizes.menu_hspace,
+		top = 2, // MRview323.sizes.menu_vspace, (vspace now zero)
+		width = MRview323.sizes.menu_width,
+		height = MRview323.sizes.menu_height;
+
+		for ( var i in this.menus ) {
+			this.menus[ i ].resize( left, top, width, height );
+			top += MRview323.sizes.menu_height + MRview323.sizes.menu_vspace;
+		}
+
+} // end: MenuSet.resize()
+
+/** */
+MRview323.MenuSet.prototype.toString = function () {
+	var ret = 'MenuSet{menus=';
+	for ( var i in this.menus ) {
+		var menu = this.menus[ i ].toString();
+		ret += '\r\n    ' + menu;
+	}
+	return ret + '}';
+} // end: MenuSet.toString()
+
+/**I Controller */
+
+/** Resize controller.
+After a window resize, we call the 'layout()' function. The trick is that we don't want to call this function during a resizing (while the user is changing the window size). So ...
+
+The window resize event (which will fire many times as the user resizes) calls the controller. The controller schedules a 'layout()' after a FEW millis. Before it schedules a new 'layout()', however, it looks to see if one is already scheduled. If there is a pending 'layout()' it cancels the pending 'layout()'. So for the many times the resize event fires as the user fiddles with the window size, almost all of them simply cancel a pending 'layout()' and schedule a new one for a FEW millis later. Sooner or later the user stops fiddling and a scheduled 'layout()' actually happens. */
+MRview323.launch_resize = function () {
+
+    var FEW = 20; // a FEW millis
+
+    if ( MRview323.launch_resize.timeout !== undefined ) {
+        clearTimeout( MRview323.launch_resize.timeout );
+        MRview323.launch_resize.timeout = undefined;
+    }
+
+    MRview323.launch_resize.timeout = setTimeout( MRview323.layout, FEW );
+
+} // end: launch_resize()
+
+/** Future paints? On resize. */
+window.onresize = MRview323.launch_resize;
+
+/**I On Load */
+
+MRview323.go = function () {
+
+/* The 'go()' function just calls 'layout()', except that 'layout()' may fail
+in MSIE. (MSIE 7 and earlier?) On failure, 'layout()' returns 100, 'go()'
+waits 100 millis and tries to 'layout()' again. This keeps up until the
+MSIE 'layout()' succeeds. (Usually, on the second try.)
+
+Success? No return from 'layout()' (undefined).*/
+
+    var retry = MRview323.layout(); // failed layout returns 100
+    if ( retry && (retry > 0) ) {
+        setTimeout( MRview323.go, retry );
+        return;
+    } else { MRview323.ready = true; }
+
+} // end: go()
+
+MRview323.build();
+MRview323.go(); // Does a 'layout()' plus works around an MSIE bug.
+
+/**A Next Function */
+
+var nextfunc = document.getElementById( 'next_func_label' );
+	nextfunc.onclick = next_func;
+
+/** */
+function next_func() {
+
+	var build,
+		nsm = document.getElementById( 'next_site_map' );
+
+	if ( nsm === null ) {
+		build = confirm( 'Next Site Map not found. Code it?' );
+		if ( !build ) { return; }
+		else {
+			next_site_map_build();
+			// presumably the map is copied into the code and page reloaded
+			return;
+		}
+	}
+
+	// site map already built
+	window.location =
+			MRlib323.url_set_fragment( window.location, 'next_site_map' );
+
+} // end: next_func()
+
+function next_site_map_build() {
+
+	var nsmb_div = document.createElement( 'textarea' );
+		nsmb_div.rows=50;
+		var s = nsmb_div.style;
+			s.background = '#f0f0ff';
+			s.border = '#a0a0ff ridge 5px';
+			s.fontFamily = 'Courier New, monopspace';
+			s.fontSize = '9pt';
+			s.left = '50px';
+			s.padding = '10px';
+			s.position = 'fixed';
+			s.top = '100px';
+			s.width = '90%';
+	document.body.appendChild( nsmb_div );
+
+	var cps_table = MRdata323.get_current_page_subtree_table();
+
+	var data = cps_table.data;
+	var on_start = data[0][0];
+	var on_start_length = on_start.length;
+	var folders_start = get_folders( data[0] );
+
+	write_header( nsmb_div );
+	write_rows( nsmb_div, data, on_start_length, folders_start );
+	write_footer( nsmb_div );
+
+	function get_folders( data_arr ) {
+		var pn = make_path_name( data_arr );
+
+		var folders = pn.split( '/' );
+			folders = folders.slice( 0, folders.length - 1 );
+
+		return folders;
+	} // end: get_folders();
+
+	function make_path_name( data_arr ) {
+		return MRdata323.expand_path( data_arr[4] ) + '/' + data_arr[3];
+	}
+
+	function relative_path_name( folders_from, data_arr_to ) {
+
+		var folders_to = make_path_name( data_arr_to ).split( '/' );
+
+		/* Algorithm: start at left of folders stacks. pointer = 0
+			if folders_from[pointer] == folders_to[pointer] ?
+				pointer++
+			else (folders don't match, or pointer > length of folders_from)
+				discard processed folders_to
+				convert remaining folders_to to pathname
+				prepend one '../' for each unmatched folders_from
+		*/
+		var i = 0,
+			len = folders_from.length;
+
+		for ( ; i < len; i += 1 ) {
+			if ( folders_from[i] !== folders_to[i] ) { break; }
+		}
+
+		var unmatched = len - i;
+		folders_to = folders_to.slice(i);
+		var backup = '';
+		for ( i = 0; i < unmatched; i+=1 ) {
+			backup += '../';
+		}
+
+		return backup + folders_to.join( '/' );
+	} // end: relative_path()
+
+	function make_row_span( data_arr, on_start_length, folders_start ) {
+
+		var ret = [];
+			ret.push( '&lt;span ' + 'style="margin-left: ' +
+					indent( data_arr, on_start_length ) + 'px' +
+			'"> ' );
+			ret.push( '&lt;a href="' +
+					relative_path_name(folders_start, data_arr) + '.html' );
+			ret.push( '"\n\t title="' + data_arr[2] );
+			ret.push( '"> ' ); // close the <a> element
+			ret.push( no_ampersand_lt(data_arr[1]) + ' ' );
+			ret.push( ' &lt;/a>' ); // add </a>
+			ret.push( ' &lt;/span> &lt;br>' );
+			//  <br>';
+		// spn.title = data_arr[2];
+
+		return ret.join('');
+
+		function indent( data_arr, on_start_length ) {
+			var len = data_arr[0].length; // outnum array length
+				len -= on_start_length;
+			return len * 50;
+		} // end indent()
+
+		function no_ampersand_lt( str ) {
+
+			// only finds one (sb there is exactly zero or one)
+			var loc = str.indexOf('&lt;');
+			if ( loc === -1 ) { return str; }
+
+			var start = str.substr(0, loc);
+			var mid = '&amp;amp;lt;'
+			var end = str.substr(loc + 4);
+			alert( start + mid + end );
+
+			return start + mid + end;
+
+		} // end no_ampersand_lt()
+
+	} // end: make_row_span()
+
+	function write_footer( nsmb_div ) {
+		nsmb_div.innerHTML += '\n</div> <!-- site_map -->\n\n' +
+				'</div> <!-- next_site_map -->\n\n' +
+				'<script type="text/javascript">\n\n' +
+				'var site_map_button = \n' +
+				'        document.getElementById( ' +
+						'"show_site_map_button" );\n' +
+				'    site_map_button.onclick = show_hide_site_map;\n\n' +
+				'function show_hide_site_map() {\n' +
+				'    var button=this;\n' +
+				'    var map_div = document.getElementById( ' +
+							'"site_map" );\n\n' +
+
+				'    if ( map_div.style.display === "none" ) {\n' +
+				'        map_div.style.display = "block";\n' +
+				'        button.innerHTML = "Hide";\n' +
+				'    } else {\n' +
+				'        map_div.style.display = "none";\n' +
+				'        button.innerHTML = "Show";\n' +
+				'    }\n' +
+				'} // end: show_hide_site_map()\n\n' +
+				'</script>\n\n';
+	}
+
+	function write_header( nsmb_div ) {
+
+		nsmb_div.innerHTML =
+'<div id="next_site_map" ' +
+'style="display: inline-block; position: relative">\n\n' +
+
+'<h2 style="position: relative; top: -25px">\n' +
+'<span style="font-size: 14pt;">\n' +
+'    <button id="show_site_map_button" style= "\n' +
+'            border-style: outset;\n' +
+'            border-width: 3px;\n' +
+'            font-size: 10pt;\n' +
+'            line-height: 14pt;\n' +
+'            height: 30px;\n' +
+'            padding: 3px;\n' +
+'            position: relative;\n' +
+'            top: -3px;\n' +
+'            width: 60px;\n' +
+'    ">\n' +
+'        Show' +
+'    </button> Site Map, Page Children\n' +
+'</span></h2>\n\n' +
+
+'<div id="site_map" style="\n' +
+'    background-color: #f0ece8;\n' +
+'    border: #b0aca8 double 5px;\n' +
+'    border-radius: 0 20px 20px 0;\n' +
+'    display: none;\n' +
+'    margin-left: 20px;\n' +
+'    padding: 10px;\n' +
+'    position: relative;\n' +
+'">\n\n';
+
+	} // end: write_header()
+
+	function write_rows( nsmb_div, data, on_start_length, folders_start ) {
+		var prev_level = data[0][0].length;
+		for ( var i in data ) {
+			var level = data[i][0].length;
+			if ( level < prev_level ) {nsmb_div.innerHTML += '\n'; }
+			prev_level = level;
+			nsmb_div.innerHTML +=
+					make_row_span( data[i], on_start_length, folders_start ) +
+					'\n';
+		}
+	} // end: write_rows()
+
+} // end: next_site_map_build()
+
+// alert( 'support/js/mr-view323.js loaded' );
+
+/* end of support/js/mr-view323.js */

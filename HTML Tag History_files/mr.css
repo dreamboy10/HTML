@@ -1,0 +1,267 @@
+/* /MR23/support/css/mr.css - stylesheet, MartinRinehart.com, whole site
+Copyright 2011, Martin Rinehart */
+
+/* ----------------------------- tags ----------------------------- */
+a {
+	transition: background-color 1s;
+}
+a:link { color: #000020 }
+a:visited { color: #200060 }
+
+body {
+	background:				blue; /* Blue? Shows that JS didn't load. */
+	counter-reset:			figure yt;
+	font-family:			Arial, Helvetica, sans-serif;
+	font-size:				12pt;
+	margin-left:			8px;
+	margin-right:			8px;
+	margin-top:				11px;
+}
+button { font-size:			1em; }
+
+caption {
+	font-family:			'Times New Roman', serif;
+	font-size:				20pt;
+	font-weight:			bold;
+	text-shadow:			1px 1px 1px #a0a0a0;
+}
+code {
+	background:				#e0ffe0;
+	font-size:				1em;
+	padding-left:			2px;
+	padding-right:			2px;
+}
+
+figure {
+	counter-increment:		figure;
+	left:					0;
+	margin-left:			0;
+	position:				relative;
+}
+
+figure figcaption:before {
+	content:				"Figure "counter(chapter) counter(example, lower-latin) "-" counter(figure);
+}
+
+figure img + figcaption:after {
+	content:				" - Image";
+}
+
+figure iframe + figcaption:after {
+	content:				" - Animation"
+}
+
+figure figcaption {
+	background:				#fff8f4;
+	border:					brown solid 1px;
+	display:				inline-block;
+	font-size:				0.8em;
+	left:					20px;
+	padding-left:			5px;
+	padding-right:			5px;
+	position:				relative;
+	top:					-23px;
+}
+
+h1 {
+	clear:					left;
+	color:					#000040;
+	font-family:			'Times New Roman', serif;
+	font-size:				32pt;
+	line-height:			28pt;
+	margin-bottom:			0px;
+	margin-top:				5px;
+	padding-right:			5px;
+	text-align:				center;
+	text-shadow:			2px 2px 1px #a0a0a0;
+}
+h1 code {
+	padding-left:			5px;
+	padding-right:			5px;
+}
+h2 {
+	font-size:				24pt;
+	color:					#000040;
+	margin-bottom:			0px;
+	text-shadow:			1px 1px 1px #a0a0a0;
+}
+h2 code {
+	padding-left:			4px;
+	padding-right:			4px;
+}
+h3 {
+	font-family:			'Times New Roman', serif;
+	font-size:				20pt;
+	margin-bottom:			0px;
+	margin-left:			0px;
+	text-shadow:			1px 1px 1px #a0a0a0;
+}
+h3 code {
+	padding-left:			3px;
+	padding-right:			3px;
+}
+h4 {
+	font-size:				16pt;
+	margin-bottom:			0px;
+}
+h1, h2, h3, h4 { page-break-after: avoid; }
+input {
+	font-family:			monospace;
+	font-size:				1em;
+}
+p { margin-top:				5px; }
+
+textarea {
+	border-radius:			0 10px 10px 10px;
+	box-shadow:				5px 5px 3px #c0c0c0;
+}
+
+/* ----------------------------- classes ----------------------------- */
+.attention { /* Draw attention to a paragraph. */
+		background:		#f0e0d0;
+		border:			2px solid #a09080;
+		display:		inline-block;
+		padding:		3px;
+		padding-left:	10px;
+		padding-right:	10px;
+	}
+.code, .listing {
+	border:				3px double green;
+	box-shadow:			5px 5px 2px #a0a0a0;
+	border-radius:		0 0px 20px 0;
+	display:			inline-block;
+	font-family:		monospace;
+	font-size:			8pt;
+	margin-bottom:		10px;
+	padding:			5px;
+}
+.code {
+	background:			#d8ffd8;
+}
+.columnable h2 {
+	padding-left:		16px;
+}
+.columnable h3 {
+	padding-left:		1em;
+}
+.editable {
+	background:			#e0f0ff;
+	border:				5px solid blue;
+	border-radius:		0 10px 20px 10px;
+	box-shadow:			5px 5px 3px #c0c0f0;
+	display:			inline-block;
+}
+.filename {
+	background:			#d0e0d4;
+	border:				3px double #406880;
+	border-radius:		5px 0 0 0;
+	display:			inline-block;
+	font-family:		monospace;
+	font-size:			16pt;
+	padding:			3px;
+}
+.links {
+	background:			#f0ffff;
+	border:				5px ridge #a0ffff;
+	border-radius:		20px;
+	display:			inline-block;
+	margin:				20px;
+	padding:			10px;
+}
+.listing {
+	background:			#d0e0d4;
+	border-color:		#406880;
+	font-family:		monospace;
+	margin-left:		10px;
+}
+.hilite {
+	background:			white;
+}
+.noselect { /* Stack Overflow suggested these: (they don't really work)
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none; */
+}
+.nowrap {
+	white-space:		nowrap;
+}
+.prereq {
+	background:			#f0f0ff;
+	border:				3px solid #a0a0ff;
+	border-radius:		5px;
+	clear:				left;
+	display:			inline-block;
+	margin-bottom:		1em;
+	padding:			5px;
+	width:				80%;
+}
+.roman_ii { font-family: 'Times New roman', serif; }
+
+.sidebar {
+	background:			#f0f0ff;
+	border:				3px double #a0a0ff;
+	float:				right;
+	margin-left:		5px;
+	padding:			5px;
+	width:				30%;
+}
+.warning {
+	background:			#fff0f0;
+	border:				5px solid #ffa0a0;
+	display:			inline-block;
+	transition:			background-color 2s,
+						border-color 0.5s;
+	padding:			20px;
+}
+
+.warning:hover {
+	background-color:	#ffb0b0;
+	border-color:		red;
+}
+
+.yt { /* "Your turn" div */
+	background:			#f0f0ff;
+	border:				#a0a0ff ridge 5px;
+	border-radius:		8px / 16px;
+	margin-top:			25px;
+	margin-bottom:		25px;
+	padding:			5px;
+	padding-top:		2px;
+	padding-bottom:		0px;
+	position:			relative;
+	width:				80%;
+}
+
+.yts { /* "Your turn" span */
+	background:			#f0f0ff;
+	border:				#a0a0ff ridge 5px;
+	border-radius:		4px / 12px;
+	font-family:		Arial, sans-serif;
+	font-size:			12pt;
+	font-weight:		bold;
+	padding-left:		5px;
+	padding-right:		5px;
+	position:			relative;
+	top:				-14px;
+}
+
+.yts:after {
+	counter-increment:	yt;
+	content:			"Your Turn " counter(chapter) counter(example,lower-latin) " - " counter(yt);
+}
+
+/* ----------------------------- elements ----------------------------- */
+#content {
+	background:			#fffcf8;
+	padding:			5px;
+}
+#copy {
+	font-size:			8pt;
+	margin-top:			1px;
+	text-align:			right;
+}
+
+/* end of /MR23/support/css/mr.css */

@@ -1,0 +1,1011 @@
+/* mr-data323.js
+Copyright 2012, Martin Rinehart */
+
+/* Table of Contents
+  47 I. Data
+  49     A. MRdata323 - The Global Data Object
+  52     B. MRdata323.menu_data_arr - One entry for each page.
+ 544     C. MRdata323.path_expansions -
+ 554 II. Getters
+ 564     A. During Initialization
+ 566         1. MRdata323.home_func() 'home' and 'page'
+ 602     B. As Requested by View
+ 604         1. MRdata323.get_current_page_menu_data_list() Home -> current.
+ 636         2. MRdata323.get_current_page_subtree_table() current -> end.
+ 651         3. MRdata323.get_page_data() Object, one property per page row.
+ 675         4. MRdata323.get_page_tree() Tree of page row objects.
+ 703         5. MRdata323.get_pcn_menu_data_arr_on() Prev, cur, next rows.
+ 731     C. Private (non-API) Getters
+ 733         1. MRdata323.get_current_page_menu_data() Menu (page w/siblings).
+ 739         2. MRdata323.get_current_page_row() One row for the current page.
+ 751         3. MRdata323.get_current_page_tree_node() Node in menu data tree.
+ 763         4. MRdata323.get_node_menu_data() Menu data (node + siblings ).
+ 782 III. Utilities
+ 784     A. MRdata323.contract_path() Full paths abbreviated.
+ 797     B. MRdata323.expand_path() Abbreviations spelled out.
+ 810     C. MRdata323.go2() Load new page.
+ 817     D. MRdata323.strip_fragment_identifier() Remove frag id from URL
+ 840 IV. Classes
+ 842     A. MenuTreeNode
+ 844         1. MRdata323.MenuTreeNode()
+ 868         2. MRdata323.MenuTreeNode.prototype.toString()
+ 880     B. MenuData
+ 882         1. MRdata323.MenuData()
+ 889         2. MRdata323.MenuData.prototype.selected_node()
+ 893         3. MRdata323.MenuData.prototype.toString()
+ 903 V. Page Turners
+ 905     A. Page Turner Data
+ 907         1. MRdata323.turner_styles - Styles, Both
+ 933     B. Code
+ 987 VI. MRdata323 Initialization
+ 989     A. Root (xxx.home) and Current Page (xxx.page)
+ 992     B. Outline Numbers (xxx.menu_data_arr_on)
+*/
+
+'use strict';
+
+/**I Data */
+
+/** The Global Data Object */
+var MRdata323 = {};
+
+/** One entry for each page. */
+MRdata323.menu_data_arr = [
+
+/* Entries are four item arrays:
+	e[0]	optional tabs (note below) plus menu text
+	e[1]	tooltip text
+	e[2]	pathname without prefix (see e[3]) and without '.html' suffix
+	e[3]	path prefix contraction (listed in MRdata323.path_expansions)
+				example: 'fe_e' expansion 	['fe_e',		'frontend-engineering/engineers'],
+
+	Optional tabs:
+		none?	root item, home page (must be first item)
+
+		let p# = previous item's # of tabs
+		let c# = current item's # of tabs
+
+		c# === p#		sibling of previous item
+		c# === p# + 1	first child of previous item
+		c# < p#			sibling of first item above with # tabs === c#
+*/
+
+	["Home", "MartinRinehart.com home page.", "index" , ""],
+	["	Artists", "Artists\' track home page.", "artists", "fe_a"],
+	["		Effects", "Artist\'s effects home page.", "effects/effects", "fe_a"],
+	["			Fade Ins", "Fading an element in over time (after optional delay).", "effects/effects-fade-ins", "fe_a"],
+	["			Fade Outs", "Fading an element out over time (w/optional delay).", "effects/effects-fade-outs", "fe_a"],
+	["			Flashes", "Flashing an element (NOT RECOMMENDED!).", "effects/effects-flashes", "fe_a"],
+	["			Glimmers", "Showing a dream-like, teasing glimpse.", "effects/effects-glimmers", "fe_a"],
+	["			Hovers", "Showing a more substantial tooltip alternative.", "effects/effects-hovers", "fe_a"],
+	["			Popups", "Like a hover but with optional widgets.", "effects/effects-popups", "fe_a"],
+	["			Shakes", "Grab attention in a crowded page.", "effects/effects-shakes", "fe_a"],
+	["			Swells", "Like shakes, another attention-grabbing alternative.", "effects/effects-swells", "fe_a"],
+	["		Gradients", "Artist\'s gradients home page.", "gradients/gradients", "fe_a"],
+	["			Horizontal", "Horizontal gradients wash from side-to-side.", "gradients/gradients-horizontal", "fe_a"],
+	["			Horz. Opposed", "Horizontal gradients wash side-to-center-to-side.", "gradients/gradients-horizontal-opposed", "fe_a"],
+	["			Vertical", "Vertical gradients wash top-to-bottom.", "gradients/gradients-vertical", "fe_a"],
+	["			Vert. Opposed", "Vertical gradients wash top-to-center-to-bottom.", "gradients/gradients-vertical-opposed", "fe_a"],
+	['			Gradient Frames', 'Sample impressionist paintings in gradient frames.', 'gradients/gradient-framed-impressionists', 'fe_a'],
+	["			Frame It!", "Gradient frame, image framing tool.", "gradients/frame-it-2", "fe_a"],
+	["			Theory", "Gradient theory: JavaScript v. Photoshop.", "gradients/gradient-theory", "fe_a"],
+	["		Morphs", "Artist\'s morphs home page.", "morphs/morphs", "fe_a"],
+	["			Size Morphs", "Swelling (and/or shrinking) DOM elements.", "morphs/morph-sizes", "fe_a"],
+	["			Location Morphs", "Moving DOM elements.", "morphs/morph-locations", "fe_a"],
+	["			Color Morphs", "Changing backgrounds and border colors.", "morphs/morph-colors", "fe_a"],
+	["			Border Morphs", "Resizing (and/or reshape) borders.", "morphs/morph-borders", "fe_a"],
+	["		3D Cards","Greeting cards using CSS3 3D transforms.","cards/3d-cards", "fe_a"],
+	["			Xmas","2013 Christmas card (rotating fancy cube)", "cards/xmas/xmas-card", "fe_a"],
+	["			Valentine","2014 valentine (rotating fancy pentagon extrusion)", "cards/valentine/valentine-carousel", "fe_a"],
+	["		Other", "Artist\'s other page TOC.", "other", "fe_a"],
+	["			Border Radius", "Exploring the limits of CSS3 border radii.", "other/border-radius-limits", "fe_a"],
+	["			Columns", "CSS3 multi-column layout example and how-to.", "other/columns", "fe_a"],
+	["			Dance", "Making multiple morphs all work together.", "other/dance", "fe_a"],
+	["			Meters&nbsp;HTML5", "Meters in HTML5 status report.", "other/meters-h5", "fe_a"],
+	["			Meters&nbsp;UI", "Meter UI and sample meters.", "other/meters-ui", "fe_a"],
+	["			Meters&nbsp;I/O", "Split bar and draggable handle meters.", "other/meters-io", "fe_a"],
+	["			Script", "Default script and cursive fonts.", "other/script", "fe_a"],
+	["			Sparkle", "Sparkle - an original effect.", "other/sparkle", "fe_a"],
+
+	["	Engineers", "pages for frontend engineers.", "engineers", "fe_e"],
+	["		Frontend&nbsp;Tools", "Frontend engineers\' tools.", "tools/tools", "fe_e"],
+	["			JSODoc Doc", "JavaScript Outlining Documentor (documentation).", "tools/jsodoc-doc", "fe_e"],
+	["			JSODoc", "JavaScript Outlining Documentor (tool).", "tools/jsodoc", "fe_e"],
+	["			Fluidulator&nbsp;Doc", "Fluid frontend single-purpose calculator (documentation).", "tools/fluid-calculator", "fe_e"],
+	["			Fluidulator", "Fluid frontend single-purpose calculator (tool)", "tools/fluidulator", "fe_e"],
+	["			HTML Fixup", "Regex-based tool for multi-issue HTML fixups.", "tools/html-fixup", "fe_e"],
+	["			Table Editor", "Edit, write code, for Table objects.", "tools/table-editor", "fe_e"],
+	["			Notepad++", "Menu of supplemental docs, little-known features of Notepad++.", "tools/notepad-pp", "fe_e"],
+	["				Lines", "Saving vertical lines in Notepad++.", "tools/notepad-pp/lines-pp", "fe_e"],
+	["				Sessions", "Working on different file sets in Notepad++.", "tools/notepad-pp/sessions", "fe_e"],
+	["				Bookmarks", "Using bookmarks in Notepad++.", "tools/notepad-pp/bookmarks", "fe_e"],
+	["				Shortcuts", "Customizing keyboard shortcuts in Notepad++.", "tools/notepad-pp/shortcuts", "fe_e"],
+	["				Macros", "Macro recording in Notepad++.", "tools/notepad-pp/macros", "fe_e"],
+	["				Source","Installing Notepad++ as source viewer in most browsers", "tools/notepad-pp/view-source", "fe_e"],
+	["				More&nbsp;Np++", "Menu 2, supplemental docs, little-known features of Notepad++.", "tools/notepad-pp/notepad-pp2", "fe_e"],
+	["					BlockMode", "Working on text blocks in Notepad++.", "tools/notepad-pp/block-mode", "fe_e"],
+	["					Tabs", "Tab choices in Notepad++.", "tools/notepad-pp/tabs", "fe_e"],
+	["					Settings", "The Settings menu in Notepad++.", "tools/notepad-pp/settings", "fe_e"],
+	["					Find&nbsp;Extended", "Find, Replace extended Search Mode in Notepad++.", "tools/notepad-pp/search-rep-extended", "fe_e"],
+	["					Find&nbsp;Regex", "Search and replace with regular expressions.", "tools/notepad-pp/search-rep-regex", "fe_e"],
+	["					Find&nbsp;in&nbsp;Files", "Editing multiple files at once.", "tools/notepad-pp/find-in-files", "fe_e"],
+
+	["		Frontend&nbsp;Team", "Team of players who design the frontend.", "team/team", "fe"],
+	["			Fe E Defined", "Frontend engineering is a team discipline.", "team/frontend-engineering-defined", "fe"],
+	["			Fe Design", "Frontend design is the artists calling.", "team/frontend-design", "fe"],
+	["			Fe UI/UX", "User interface / user experience is an expanding design discipline.", "team/frontend-uiux", "fe"],
+	["			Fe SEO", "Search engine optimization, so all the hard work gets found.", "team/frontend-seo", "fe"],
+	["			Fe Programming", "The job of the frontend engineer is programming.", "team/frontend-programming", "fe"],
+
+	["		HTML", "Engineers\' HTML-related pages.", "html/html", "fe_e"],
+	["			Database Data", "HTML database data in source tables.", "html/html-data", "fe_e"],
+	["				Support", "Support Tables: Versions, Organizations and Standards", "html/data/html-support-tables", "fe_e"],
+	["					Raw Tags", "Raw Data, HTML Tags Versions 1 through 5", "html/data/raw-tags", "fe_e"],
+	["					Raw Attrs", "Raw Data, HTML Attributes Versions 1 through 5", "html/data/raw-attrs", "fe_e"],
+	["					Reference #s", "Source document reference numbers, each version, by tag.", "html/data/reference-numbers", "fe_e"],
+	["					HTML 32", "HTML 3.2 pseudo reference numbers.", "html/data/html-32", "fe_e"],
+	["				Summaries", "HTML database summaries of source tables.", "html/html-data-summaries", "fe_e"],
+	["					Attrs 4", "Attributes, HTML 4.01 sorted by tag.", "html/attrs-4", "fe_e"],
+	["					Attrs 5", "Attributes, HTML 5, sorted by tag.", "html/attrs-5", "fe_e"],
+	["					Attrs 4 5", "Attributes of HTML 5 tags in HTML 4 and 5.", "html/attrs-45", "fe_e"],
+	["					Attrs All", "Attributes sorted by tag, all versions.", "html/attrs-all", "fe_e"],
+	["					Tags by Attr", "Tags sorted by attribute name, all versions.", "html/t-x-a", "fe_e"],
+	["				Research Tables", "HTML database data in research tables.", "html/html-data-research-tables", "fe_e"],
+	["					Tag History", "History of all tags since HTML 1.", "html/html-tag-history", "fe_e"],
+	["					Tags\' Qref", "All tags\' standards documents quick reference.", "html/html-tags-qref", "fe_e"],
+	["					Tags\' Stds", "All tags\' standards documents.", "html/html-tags-reference", "fe_e"],
+
+	["			SVG", "Scalable Vector Graphics (in HTML5)", "html/svg/svg", "fe_e"],
+
+	["		CSS", "Engineer\'s CSS-related pages.", "css/css", "fe_e"],
+	["			Gradients", "Engineer\'s CSS3 gradients.", "css/css-gradients", "fe_e"],
+	["				Linear Gradients", "Engineer\'s CSS3 linear gradients.", "css/css-linear-gradients", "fe_e"],
+	["				Radial Gradients", "Engineer\'s CSS3 radial (circular and elliptical) gradients.", "css/css-radial-gradients", "fe_e"],
+	["			Transformations", "Engineer\'s CSS3 transformations.", "css/css-transformations", "fe_e"],
+	["				2D Rotate", "Engineer\'s CSS3 2D rotation transformations.", "css/css-transform-2d-rotate", "fe_e"],
+	["				2D Scale", "Engineer\'s CSS3 2D scale transformations.", "css/css-transform-2d-scale", "fe_e"],
+	["				2D Skew", "Engineer\'s CSS3 2D skew transformations.", "css/css-transform-2d-skew", "fe_e"],
+	["				2D Translate", "Engineer\'s CSS3 2D translation transformations.", "css/css-transform-2d-translate", "fe_e"],
+	["			Transitions", "Engineer\'s CSS3 transitions.", "css/css-transitions", "fe_e"],
+	["			Animations",  "Engineer\'s CSS3 animations.",  "css/css-animations",  "fe_e"],
+	["			Polygon", "Extruded polygon (carousels) in CSS.", "other/extruded-polygon", "fe_a"],
+	["			3D Demo", "Engineer\'s 3D demo cube, animated.", "css/cube", "fe_e"],
+
+	["		JavaScript", "Engineers JavaScript pages.", "javascript", "fe_e_j"],
+	["			Array Qref", "Array methods quick reference table.", "arrays/array-qref", "fe_e_j"],
+	["			Cheryl&nbsp;Rule", "Writing JavaScript with a top pro\'s style.", "cheryl-rule", "fe_e_j"],
+	["			Iffy IIFE", "Avoid today's Immediately-Invoked Function Expression (IIFE) fad.", "iife-iffy", "fe_e_j"],
+
+	["			JS&nbsp;Classes", "Using JavaScript for traditional classes.", "inher/javascript-inher-menu", "fe_e_j"],
+	["				Prototypes", "Prototypes for class methods and inheritance.", "inher/class-based/prototypal-classes-and-inheritance", "fe_e_j"],
+	["				Inheritance Defined", "Inheritance for classical and prototypal models.", "inher/class-based/inheritance-defined", "fe_e_j"],
+	["				Inheritance Implemented", "Inheritance implemented using prototypal chain.", "inher/class-based/inheritance-implemented", "fe_e_j"],
+	["				OP&nbsp;and&nbsp;OOP", "A second new look at what makes JavaScript special.", "inher/class-based/op-and-oop", "fe_e_j"],
+	["				OP&nbsp;Examples", "JavaScript examples of object programming.", "inher/class-based/op-examples", "fe_e_j"],
+	["				A&nbsp;New&nbsp;View", "A radical, new look at what makes JavaScript special.", "inher/class-based/another-view", "fe_e_j"],
+	["				Class&nbsp;Basics", "Class-based OOP basics.", "inher/class-based/javascript-classes-menu", "fe_e_j"],
+	["					Inher...", "Basic terminology, and why we don\'t say \"inher...\".", "inher/class-based/javascript-inher", "fe_e_j"],
+	["					Class-Based", "Inheritance in Class-Based Languages", "inher/class-based/extending-class-based", "fe_e_j"],
+	["					Constructors", "Inheritance via cascading constructors.", "inher/class-based/extending-javascript-data", "fe_e_j"],
+	["					Methods", "Extending instance methods", "inher/class-based/extending-javascript-methods", "fe_e_j"],
+	["					Another", "Another take on prototypal inheritance problems.", "inher/class-based/prototypal-not", "fe_e_j"],
+	["				Master&nbsp;Classers", "Master JavaScripters class-related programs.", "inher/masters/javascript-masters-menu", "fe_e_j"],
+	["					Introduction", "Master programmers\' inheritance libraries.", "inher/masters/master-inher-intro", "fe_e_j"],
+	["					Crockford", "Crockford\'s take on JavaScript inheritance.", "inher/masters/master-inher-crockford", "fe_e_j"],
+	["					Flanagan", "Flanagan\'s take on JavaScript inheritance.", "inher/masters/master-inher-flanagan", "fe_e_j"],
+	["					Resig", "Resig\'s take on JavaScript inheritance.", "inher/masters/master-inher-resig", "fe_e_j"],
+	["					Edwards", "Edward\'s take on JavaScript inheritance.", "inher/masters/master-inher-edwards", "fe_e_j"],
+	["					Comparison", "Comparison of the masters\' programs.", "inher/masters/master-inheritance-comparison", "fe_e_j"],
+
+	["			More&nbsp;JS", "More JavaScript pages.", "other/more-js", "fe_e_j"],
+	["				Sparse&nbsp;Arrays", "Slicing and splicing sparse arrays in JavaScript", "arrays/sparse-arrays", "fe_e_j"],
+	["				Array&nbsp;Loops", "The best way to loop over array elements in JavaScript", "arrays/array-loops", "fe_e_j"],
+	["				No&nbsp;Globals", "Writing JavaScript without creating excess global variables (mostly).", "other/no-globals", "fe_e_j"],
+	["				undefined", "Defining JavaScript\'s undefined.", "other/undefined", "fe_e_j"],
+	["				Inner&nbsp;Functions", "Using inner functions for better JavaScript.", "other/inner-functions", "fe_e_j"],
+	["				Sorts", "Using functional programming for advanced JavaScript sorts.", "other/sort-functions", "fe_e_j"],
+	["				Threads", "An API for lightweight threads in JavaScript", "other/threads", "fe_e_j"],
+	["				Ex Nlo Classes","Classes to support ex nihilo objects","other/ex-nihilo-classes","fe_e_j"],
+
+	["			MR-lib", "Documentation for the MR-lib library", "mr-lib", "fe_e_j"],
+	["				Classes", "Documentation for classes in the MR-lib library.", "mr-lib/classes", "fe_e_j"],
+	["					Delem", "DOM element wrapper objects.", "mr-lib/classes/delem-class", "fe_e_j"],
+	["					Gradients", "Classes to create horizontal and vertical color gradients.", "mr-lib/classes/gradient-classes", "fe_e_j"],
+	["					Outline Class", "Creating a folding outline.", "mr-lib/classes/outline-class", "fe_e_j"],
+	["					Rect Class", "Using Rects to create DOM divs.", "mr-lib/classes/rect-class", "fe_e_j"],
+	["					Table Class", "Using relational tables and SQL, in JavaScript.", "mr-lib/classes/table-class", "fe_e_j"],
+	["					Thread Class", "Using Threads to run objects.", "mr-lib/classes/thread-class", "fe_e_j"],
+
+	["				Functions", "Documentation for functions in the MR-lib library.", "mr-lib/functions", "fe_e_j"],
+	["					Animation", "Documentation for the MR-lib animation functions.", "mr-lib/animation", "fe_e_j"],
+	["					Array", "Functions that manipulate arrays.", "mr-lib/functions/array-functions", "fe_e_j"],
+	["					Color", "Functions that handle color specs.", "mr-lib/functions/color-functions", "fe_e_j"],
+	["					Compare", "Functions that compare (for sorts) values.", "mr-lib/functions/compare-functions", "fe_e_j"],
+	["					Dance", "Documentation for the MR-lib dance function.", "mr-lib/animation/dance", "fe_e_j"],
+	["					DOM", "Functions that handle DOM elements.", "mr-lib/functions/dom-functions", "fe_e_j"],
+	["					Effects", "Functions that create glimmers, swells, etc.", "mr-lib/effects", "fe_e_j"],
+	["					Misc.", "Functions that evade the other categories.", "mr-lib/functions/misc-functions", "fe_e_j"],
+	["					Morph", "Documentation for the MR-lib morph functions.", "mr-lib/animation/morph-functions", "fe_e_j"],
+	["					Morph&nbsp;Support", "Documentation for the MR-lib morph support functions.", "mr-lib/animation/morph-support-functions", "fe_e_j"],
+	["					String", "Functions that handle strings.", "mr-lib/functions/string-functions", "fe_e_j"],
+	["					X-Browser", "Functions that smooth over x-browsers issues.", "mr-lib/functions/xbrowser-functions", "fe_e_j"],
+	["				Other", "Documentation for other entities in the MR-lib library.", "mr-lib/other", "fe_e_j"],
+	["					Styles Objects", "Using an object to style DOM elements.", "mr-lib/other/styles-object", "fe_e_j"],
+
+	["			XBrowser", "Programming for all browsers (even MSIE 7).", "xbrowser", "fe_e_jx"],
+	['				Debugging a Loop', 'Which browser do you choose to find a simple error in a loop?', 'xbrowser-debugging', 'fe_e_jx'],
+	["				Not MSIE", "Cross-browser issues, not MSIE-specific.", "xbrowser-not-msie", "fe_e_jx"],
+	["					Button&nbsp;Size", "Sizing for 'button' elements is not reliable and different for different browsers. Use 'div's.", "xbrowser-button-size", "fe_e_jx"],
+	["					One Global", "Browsers (except FF) create bogus globals for DOM elements.", "xbrowser-bogus-global-variables", "fe_e_jx"],
+	["					<code>arg in args</code>", "Not all browsers allow for/in loops over the \"arguments\" pseudo-array.", "xbrowser-loop-over-arguments-pseudo-array", "fe_e_jx"],
+	["					Letter Size", "Find the size of a letter? In your dreams!", "xbrowser-finding-letter-size", "fe_e_jx"],
+	["					&lt;center>", "Where is center? And if you have floats?", "xbrowser-where-is-center", "fe_e_jx"],
+	["					TextAreas", "A unique, but helpful, FF-specific &lt;textarea> behavior.", "xbrowser-textarea-gotchas", "fe_e_jx"],
+	["					Opera Lists", "Opera displays prefixed lists (ol, ul) wrong.", "xbrowser-opera-bug", "fe_e_jx"],
+	["				MSIE 1", "Cross-browser issues specific to MSIE, part 1.", "xbrowser-msie-1","fe_e_jx"],
+	["					MSIE?", "A common frontender\'s opinion of MSIE.", "xbrowser-msie-frontenders-opinion", "fe_e_jx"],
+	["					Get Class", "An MSIE-capable getElementsByClassName().", "xbrowser-msie-get-elements-by-class-name", "fe_e_jx"],
+	["					Delete Prop.", "Deleting object properties in MSIE.", "xbrowser-msie-delete-or-assign-null", "fe_e_jx"],
+	["					Window Size", "Finding browser window size in MSIE.", "xbrowser-msie-finding-window-size", "fe_e_jx"],
+	["					Func Name", "Finding a function\'s name in MSIE.", "xbrowser-msie-function-names", "fe_e_jx"],
+	["					Test Edits", "Testing edited code in MSIE.", "xbrowser-msie-testing", "fe_e_jx"],
+	["					Opacity", "Setting opacity in MSIE.", "xbrowser-msie-opacity", "fe_e_jx"],
+	["				MSIE 2", "Cross-browser issues specific to MSIE, part 2.", "xbrowser-msie-2", "fe_e_jx"],
+	["					Btn&nbsp;Width", "Setting &lt;button> width in MSIE.", "xbrowser-msie-button-width", "fe_e_jx"],
+	["					Events", "Handling events in MSIE.", "xbrowser-msie-event-handling", "fe_e_jx"],
+	["					Clear DOM", "Clearing a DOM sub-tree in MSIE.", "xbrowser-msie-sub-tree-clearing", "fe_e_jx"],
+	["					Semi-Quirks", "Avoiding MSIE\'s unique \"semi-quirks\" mode.", "xbrowser-msie-semi-quirks-mode", "fe_e_jx"],
+	["					Hover", "Hovering over all DOM elements in MSIE 7.", "xbrowser-msie-and-hover", "fe_e_jx"],
+	["					Div Min Hgt", "Setting minimum div height in MSIE.", "xbrowser-msie-minimum-div-height", "fe_e_jx"],
+	["					RGBA", "Using RGBA colors in MSIE.", "xbrowser-msie-rgba", "fe_e_jx"],
+	["				OtherXB", "Tales from real-life, cross-browser programming.", "xbrowser-other", "fe_e_jx"],
+	["					Day Life #1", "A report from a live frontender\'s coding day.", "xbrowser-report-from-the-trenches", "fe_e_jx"],
+	["					Day Life #2", "Another live report on frontend coding.", "xbrowser-deeper-into-the-trenches", "fe_e_jx"],
+
+	["		Regex", "Engineer\'s regular expression pages.", "regex/regex", "fe_e"],
+	["			Regex Intro", "Introduction to regular expressions in JavaScript and Ruby.", "regex/tutorial-re", "fe_e"],
+	["			Readex", "Making regular expressions readable (self-documenting).", "regex/readex", "fe_e"],
+
+	["	Books", "Print-only, print+online, published and in process.", "knowits", "fe_k"],
+	["		<i>HTML&nbsp;<span style='font-family: serif'>I</span></i>", "Frontend Engineering Volume I: HTML", "v1/knowits-v1", "fe_k"],
+	["			Welcome", "Starting page, online portion of Frontend Engineering I: HTML.", "v1/welcome", "fe_k"],
+	["			Project", "Sample project website for Frontend Engineering I: HTML", "v1/website-project/sample-website", "fe_k"],
+	["			Online", "Online portion of Frontend Engineering I: HTML knowit.", "v1/online", "fe_k"],
+
+	["				1", "FeE I: HTML chapter 1 companion page and listings.", "v1/online/01/v1-chapter-01", "fe_k"],
+	["					1a", "FeE I: HTML chapter 1 examples, a.", "v1/online/01/v1-chapter-01a", "fe_k"],
+	["					1b", "FeE I: HTML chapter 1 examples, b.", "v1/online/01/v1-chapter-01b", "fe_k"],
+	["					1c", "FeE I: HTML chapter 1 examples, c.", "v1/online/01/v1-chapter-01c", "fe_k"],
+	["					1d", "FeE I: HTML chapter 1 examples, d.", "v1/online/01/v1-chapter-01d", "fe_k"],
+	["					1e", "FeE I: HTML chapter 1 examples, e.", "v1/online/01/v1-chapter-01e", "fe_k"],
+	["					1f", "FeE I: HTML chapter 1 examples, f.", "v1/online/01/v1-chapter-01f", "fe_k"],
+	["					1g", "FeE I: HTML chapter 1 examples, g.", "v1/online/01/v1-chapter-01g", "fe_k"],
+	["					1h", "FeE I: HTML chapter 1 examples, h.", "v1/online/01/v1-chapter-01h", "fe_k"],
+
+	["				2", "FeE I: HTML chapter 2 companion page and listings.", "v1/online/02/v1-chapter-02", "fe_k"],
+	["					2a", "FeE I: HTML chapter 2 examples, a.", "v1/online/02/v1-chapter-02a", "fe_k"],
+	["					2b", "FeE I: HTML chapter 2 examples, b.", "v1/online/02/v1-chapter-02b", "fe_k"],
+	["					2c", "FeE I: HTML chapter 2 examples, c.", "v1/online/02/v1-chapter-02c", "fe_k"],
+	["					2d", "FeE I: HTML chapter 2 examples, d.", "v1/online/02/v1-chapter-02d", "fe_k"],
+
+	["				3", "FeE I: HTML chapter 3 companion page and listings.", "v1/online/03/v1-chapter-03", "fe_k"],
+
+	["				4", "FeE I: HTML chapter 4 companion page and listings.", "v1/online/04/v1-chapter-04", "fe_k"],
+	["					Benny", "Benny Goodman sample page, from template.", "v1/online/04/support/benny", "fe_k"],
+	["					Gene", "Gene Krupa sample page, from template.", "v1/online/04/support/gene", "fe_k"],
+	["					Teddy", "Teddy Wilson sample page, from template.", "v1/online/04/support/teddy", "fe_k"],
+	["					Benny 2", "Benny Goodman second sample page, from benny.html.", "v1/online/04/support/benny-2", "fe_k"],
+	["					Benny 3", "Benny Goodman third sample page, from benny-2.html.", "v1/online/04/support/benny-3", "fe_k"],
+	["					Gene 3", "Gene Krupa 3-link sample page, from gene.html.", "v1/online/04/support/gene-3", "fe_k"],
+	["					Teddy 3", "Teddy Wilson 3-link sample page, from teddy.html.", "v1/online/04/support/teddy-3", "fe_k"],
+
+	["				5", "FeE I: HTML chapter 5 companion page and listings.", "v1/online/05/v1-chapter-05", "fe_k"],
+	["					Time Line 1", "FeE I: HTML chapter 5 companion page time line example 1.", "v1/online/05/timeline_1", "fe_k"],
+	["					Time Line 2", "FeE I: HTML chapter 5 companion page time line example 2.", "v1/online/05/timeline_2", "fe_k"],
+	["					Time Line 3", "FeE I: HTML chapter 5 companion page time line example 3.", "v1/online/05/timeline_3", "fe_k"],
+
+	["				6", "FeE I: HTML chapter 6 companion page and listings.", "v1/online/06/v1-chapter-06", "fe_k"],
+	["					6a1", "FeE I: HTML chapter 6a1 companion page and listings.", "v1/online/06/sample-map-a1", "fe_k"],
+	["					6a2", "FeE I: HTML chapter 6a2 companion page and listings.", "v1/online/06/sample-map-a2", "fe_k"],
+	["					6b1", "FeE I: HTML chapter 6b1 companion page and listings.", "v1/online/06/sample-map-b1", "fe_k"],
+	["					6b2", "FeE I: HTML chapter 6b2 companion page and listings.", "v1/online/06/sample-map-b2", "fe_k"],
+	["					6c1", "FeE I: HTML chapter 6c1 companion page and listings.", "v1/online/06/linked-page-c1", "fe_k"],
+	["					6c2", "FeE I: HTML chapter 6c2 companion page and listings.", "v1/online/06/linked-page-c2", "fe_k"],
+	["					6d1", "FeE I: HTML chapter 6d1 companion page and listings.", "v1/online/06/sample-map-d1", "fe_k"],
+	["					6d2", "FeE I: HTML chapter 6d2 companion page and listings.", "v1/online/06/sample-map-d2", "fe_k"],
+
+	["				7", "FeE I: HTML chapter 7 companion page and listings.", "v1/online/07/v1-chapter-07", "fe_k"],
+	["				8", "FeE I: HTML chapter 8 companion page and listings.", "v1/online/08/v1-chapter-08", "fe_k"],
+
+	["				9", "FeE I: HTML chapter 9 companion page and listings.", "v1/online/09/v1-chapter-09", "fe_k"],
+	["					9a", "FeE I: HTML chapter 9a companion page and listings.", "v1/online/09/table-a", "fe_k"],
+	["					9b", "FeE I: HTML chapter 9b companion page and listings.", "v1/online/09/table-b", "fe_k"],
+	["					9c", "FeE I: HTML chapter 9c companion page and listings.", "v1/online/09/table-c", "fe_k"],
+	["					9d", "FeE I: HTML chapter 9d companion page and listings.", "v1/online/09/table-d", "fe_k"],
+	["					9e", "FeE I: HTML chapter 9e companion page and listings.", "v1/online/09/table-e", "fe_k"],
+
+	["				10", "FeE I: HTML chapter 10 companion page and listings.", "v1/online/10/v1-chapter-10", "fe_k"],
+
+	["			Print", "Print portion of Frontend Engineering I: HTML knowit.", "v1/print", "fe_k"],
+	["			Tables", "Syllabus, TOC and reference tables for Frontend Engineering I: HTML knowit.", "v1/outlines", "fe_k"],
+	["				Syllabus", "Syllabus (folding outline style) for Frontend Engineering I: HTML", "v1/syllabus/syllabus", "fe_k"],
+	["				TOC", "TOC (folding outline style) for Frontend Engineering I: HTML", "v1/syllabus/toc", "fe_k"],
+	["				Tag/Attrs", "Supported tag/attribute List (folding outline style) for Frontend Engineering I: HTML", "v1/syllabus/tag_attrs", "fe_k"],
+	["				3&nbsp;Table", "Syllabus + outline + tag/attrs (folding outline style) for Frontend Engineering I: HTML", "v1/syllabus/tables3", "fe_k"],
+	["			Corrections", "Pro HTML corrections in chronological order.", "v1/corrections", "fe_k"],
+
+	["		<i>CSS&nbsp;<span style='font-family: serif'>II</span></i></i>", "CSS: Frontend Engineering series, Volume II of V.", "v2/knowits-v2", "fe_k"],
+	["			Welcome", "Starting page, online portion of Frontend Engineering II: Pro CSS", "v2/welcome", "fe_k"],
+	["			Project", "Sample project website for Frontend Engineering II: CSS", "v2/website-project/sample-website", "fe_k"],
+	["			Online", "Online portion of Pro CSS knowit.", "v2/online", "fe_k"],
+
+	["				1", "FeE II: CSS chapter 1 companion page and listings.", "v2/online/01/v2-chapter-01", "fe_k"],
+	["					1a", "FeE II: CSS chapter 1a Make a template.", "v2/online/01/v2-chapter-01a", "fe_k"],
+	["					1b", "FeE II: CSS chapter 1b Add inline styles.", "v2/online/01/v2-chapter-01b", "fe_k"],
+	["					1c", "FeE II: CSS chapter 1c Add an embedded style sheet.", "v2/online/01/v2-chapter-01c", "fe_k"],
+	["					1d", "FeE II: CSS chapter 1d Style with classes.", "v2/online/01/v2-chapter-01d", "fe_k"],
+	["					1e", "FeE II: CSS chapter 1e Use ID selectors.", "v2/online/01/v2-chapter-01e", "fe_k"],
+	["					1f", "FeE II: CSS chapter 1f Make a style sheet for the project.", "v2/online/01/v2-chapter-01f", "fe_k"],
+	["				2", "FeE II: CSS chapter 2 companion page and listings.", "v2/online/02/v2-chapter-02", "fe_k"],
+	["					2a", "FeE II: CSS chapter 2a Try border styles.", "v2/online/02/v2-chapter-02a", "fe_k"],
+	["					2b", "FeE II: CSS chapter 2b X/Y positioning.", "v2/online/02/v2-chapter-02b", "fe_k"],
+	["					2c", "FeE II: CSS chapter 2c Corner positioning.", "v2/online/02/v2-chapter-02c", "fe_k"],
+	["					2d", "FeE II: CSS chapter 2d Widths (%, min and max).", "v2/online/02/v2-chapter-02d", "fe_k"],
+	["					2e", "FeE II: CSS chapter 2d Project outline links.", "v2/online/02/v2-chapter-02e", "fe_k"],
+	["				3", "FeE II: CSS chapter 3 companion page and listings.", "v2/online/03/v2-chapter-03", "fe_k"],
+	["					3a", "FeE II: CSS chapter 3a, inline image positioning.", "v2/online/03/v2-chapter-03a", "fe_k"],
+	["					3b", "FeE II: CSS chapter 3b, inline text positioning.", "v2/online/03/v2-chapter-03b", "fe_k"],
+	["					3c", "FeE II: CSS chapter 3c, inline image/text positioning.", "v2/online/03/v2-chapter-03c", "fe_k"],
+	["					3d", "FeE II: CSS chapter 3d, fixed positioning.", "v2/online/03/v2-chapter-03d", "fe_k"],
+	["					3e", "FeE II: CSS chapter 3e, absolute positioning.", "v2/online/03/v2-chapter-03e", "fe_k"],
+	["					3f", "FeE II: CSS chapter 3f, relative positioning.", "v2/online/03/v2-chapter-03f", "fe_k"],
+	["					3g", "FeE II: CSS chapter 3g, vertical positioning.", "v2/online/03/v2-chapter-03g", "fe_k"],
+	["					3h", "FeE II: CSS chapter 3h, floated image in text.", "v2/online/03/v2-chapter-03h", "fe_k"],
+	["					3i", "FeE II: CSS chapter 3i, div beside float.", "v2/online/03/v2-chapter-03i", "fe_k"],
+	["				4", "FeE II: CSS chapter 4 companion page and listings.", "v2/online/04/v2-chapter-04", "fe_k"],
+	["					4a", "FeE II: CSS chapter 4a descendant selectors.", "v2/online/04/v2-chapter-04a", "fe_k"],
+	["					4b", "FeE II: CSS chapter 4b descendant selectors.", "v2/online/04/v2-chapter-04b", "fe_k"],
+	["					4c", "FeE II: CSS chapter 4c descendant selectors.", "v2/online/04/v2-chapter-04c", "fe_k"],
+	["					4d", "FeE II: CSS chapter 4d descendant selectors.", "v2/online/04/v2-chapter-04d", "fe_k"],
+	["					4e", "FeE II: CSS chapter 4e descendant selectors.", "v2/online/04/v2-chapter-04e", "fe_k"],
+	["				5", "FeE II: CSS chapter 4 companion page and listings.", "v2/online/05/v2-chapter-05", "fe_k"],
+	["					5a", "FeE II: CSS chapter 5a, the content property.", "v2/online/05/v2-chapter-05a", "fe_k"],
+	["					5b", "FeE II: CSS chapter 5b, border properties pushed too hard.", "v2/online/05/v2-chapter-05b", "fe_k"],
+	["					5c", "FeE II: CSS chapter 5c, quotes property pushed too hard.", "v2/online/05/v2-chapter-05c", "fe_k"],
+	["					5d", "FeE II: CSS chapter 5d, .", "v2/online/05/v2-chapter-05d", "fe_k"],
+	["					5e", "FeE II: CSS chapter 5e, .", "v2/online/05/v2-chapter-05e", "fe_k"],
+	["				6", "FeE II: CSS chapter 4 companion page and listings.", "v2/online/06/v2-chapter-06", "fe_k"],
+	["					6a", "FeE II: CSS chapter 6a, @import rules.", "v2/online/06/v2-chapter-06a", "fe_k"],
+	["					6b", "FeE II: CSS chapter 6b, @imedia screen and print.", "v2/online/06/v2-chapter-06b", "fe_k"],
+	["					6c", "FeE II: CSS chapter 6c, @imedia queries.", "v2/online/06/v2-chapter-06c", "fe_k"],
+	["				7", "FeE II: CSS chapter 4 companion page and listings.", "v2/online/07/v2-chapter-07", "fe_k"],
+	["					7a", "FeE II: CSS chapter 7a, Translucent and transparent properties.", "v2/online/07/v2-chapter-07a", "fe_k"],
+	["					7b", "FeE II: CSS chapter 7b, Translucent and transparent properties, cross-browser.", "v2/online/07/v2-chapter-07b", "fe_k"],
+	["					7c", "FeE II: CSS chapter 7c, Linear gradients.", "v2/online/07/v2-chapter-07c", "fe_k"],
+	["					7d", "FeE II: CSS chapter 7d, Multiple columns .", "v2/online/07/v2-chapter-07d", "fe_k"],
+	["					7e", "FeE II: CSS chapter 7e, Box and text shadows.", "v2/online/07/v2-chapter-07e", "fe_k"],
+	["					7f", "FeE II: CSS chapter 7f, Generic fonts, cross-browser issues.", "v2/online/07/v2-chapter-07f", "fe_k"],
+	["				8", "FeE II: CSS chapter 4 companion page and listings.", "v2/online/08/v2-chapter-08", "fe_k"],
+	["					8a", "FeE II: CSS chapter 8a, Round corners.", "v2/online/08/v2-chapter-08a", "fe_k"],
+	["					8b", "FeE II: CSS chapter 8b, Circles (slicing a pizza pie).", "v2/online/08/v2-chapter-08b", "fe_k"],
+	["					8c", "FeE II: CSS chapter 8c, Elliptical corners.", "v2/online/08/v2-chapter-08c", "fe_k"],
+	["					8d", "FeE II: CSS chapter 8d, Ovals (replacing 8b's pizza).", "v2/online/08/v2-chapter-08d", "fe_k"],
+	["					8e", "FeE II: CSS chapter 8e, Decorated rectangles, rows and columns.", "v2/online/08/v2-chapter-08e", "fe_k"],
+	["					8f", "FeE II: CSS chapter 8f, Eggs and shields.", "v2/online/08/v2-chapter-08f", "fe_k"],
+	["				9", "FeE II: CSS chapter 9 companion page and listings.", "v2/online/09/v2-chapter-09", "fe_k"],
+	["					9a", "FeE II: CSS chapter 9a, transforms: 2d translations.", "v2/online/09/v2-chapter-09a", "fe_k"],
+	["					9b", "FeE II: CSS chapter 9b, transforms: 2d rotations.", "v2/online/09/v2-chapter-09b", "fe_k"],
+	["					9c", "FeE II: CSS chapter 9c, transforms: 2d scalingss.", "v2/online/09/v2-chapter-09c", "fe_k"],
+	["					9d", "FeE II: CSS chapter 9d, transforms: 2d skews.", "v2/online/09/v2-chapter-09d", "fe_k"],
+	["					9e", "FeE II: CSS chapter 9e, transforms: 3d translations.", "v2/online/09/v2-chapter-09e", "fe_k"],
+	["					9f", "FeE II: CSS chapter 9f, transforms: 3d rotations.", "v2/online/09/v2-chapter-09f", "fe_k"],
+	["					9g", "FeE II: CSS chapter 9g, transforms: 3d scalings.", "v2/online/09/v2-chapter-09g", "fe_k"],
+	["					9h", "FeE II: CSS chapter 9h, transforms: 3d sample road sign.", "v2/online/09/v2-chapter-09h", "fe_k"],
+	["						9h-1", "FeE II: CSS chapter 9h, phase 1, transforms: 3d sample road sign.", "v2/online/09/css-9h-1", "fe_k"],
+	["						9h-2", "FeE II: CSS chapter 9h, phase 2, transforms: 3d sample road sign.", "v2/online/09/css-9h-2", "fe_k"],
+	["						9h-3", "FeE II: CSS chapter 9h, phase 3, transforms: 3d sample road sign.", "v2/online/09/css-9h-3", "fe_k"],
+	["						9h-4", "FeE II: CSS chapter 9h, phase 4, transforms: 3d sample road sign.", "v2/online/09/css-9h-4", "fe_k"],
+	["					9i", "FeE II: CSS chapter 9i, transforms: 3d sample cube.", "v2/online/09/v2-chapter-09i", "fe_k"],
+	["						9i-1", "FeE II: CSS chapter 9i-1, 3d transforms: cube.", "v2/online/09/css-9i-1", "fe_k"],
+	["						9i-2", "FeE II: CSS chapter 9i-2, 3d transforms: cube.", "v2/online/09/css-9i-2", "fe_k"],
+	["						9i-3", "FeE II: CSS chapter 9i-3, 3d transforms: cube.", "v2/online/09/css-9i-3", "fe_k"],
+	["						9i-4", "FeE II: CSS chapter 9i-4, 3d transforms: cube.", "v2/online/09/css-9i-4", "fe_k"],
+	["						9i-5", "FeE II: CSS chapter 9i-5, 3d transforms: cube.", "v2/online/09/css-9i-5", "fe_k"],
+	["						9i-6", "FeE II: CSS chapter 9i-6, 3d transforms: cube.", "v2/online/09/css-9i-6", "fe_k"],
+	["						9i-7", "FeE II: CSS chapter 9i-7, 3d transforms: cube.", "v2/online/09/css-9i-7", "fe_k"],
+	["				10", "FeE II: CSS chapter 10 companion page and listings.", "v2/online/10/v2-chapter-10", "fe_k"],
+	["					10a", "FeE II: CSS chapter 10a transitions.", "v2/online/10/v2-chapter-10a", "fe_k"],
+	["					10b", "FeE II: CSS chapter 10b simple animation.", "v2/online/10/v2-chapter-10b", "fe_k"],
+	["					10c", "FeE II: CSS chapter 10c transformation animation.", "v2/online/10/v2-chapter-10c", "fe_k"],
+	["					10d", "FeE II: CSS chapter 10d rotating cube.", "v2/online/10/v2-chapter-10d", "fe_k"],
+	["				A1", "FeE II: CSS Appendix A, building a carousel.", "v2/online/A/v2-chapter-A1", "fe_k"],
+
+	["			Print", "Print portion of Pro CSS knowit.", "v2/print", "fe_k"],
+	["			Outlines", "Pro CSS outlines: CSS 1, CSS 2.1, CSS 3.", "v2/outlines", "fe_k"],
+	["				Knowit", "Pro CSS outlines: Knowit TOC and syllabus.", "v2/outlines-knowit", "fe_k"],
+	["				Properties", "Pro CSS outlines: CSS 2.1 Properties List, by topic.", "v2/outlines-properties", "fe_k"],
+	["				W3C Standards", "Pro CSS outlines: CSS 1, CSS 2.1 in Recommendation Order.", "v2/outlines-recommendations", "fe_k"],
+	["			Corrections", "Pro CSS corrections in chronological order.", "v2/corrections", "fe_k"],
+
+	["		<i>JS&nbsp;<span style='font-family: serif'>III</span></i></i>", "JavaScript with Native Objects: Frontend Engineering series, Volume III of V.", "v3/knowits-v3", "fe_k"],
+	["		<i>JS&nbsp;<span style='font-family: serif'>IV</span></i></i>", "JavaScript with Host Objects: Frontend Engineering series, Volume IV of V.", "v4/knowits-v4", "fe_k"],
+	["		<i>JS&nbsp;<span style='font-family: serif'>V</span></i></i>", "JavaScript and User Objects: Frontend Engineering series, Volume V of V.", "v5/knowits-v5", "fe_k"],
+	["		<i>JOP</i>", "<i>JavaScript Inheritance and Object Programming</i>.", "op/jiop", "fe_k"],
+
+	["			<i>JOP</i> Gateway Page", "JOP internal and external sources, reference.",	"op/jiop-gateway", "fe_k"],
+
+	["			Coding Tutorials", "Coding tutorial, JavaScript Inheritance and Object Programming", "op/op-code",   "fe_k"],
+	["				0", "Coding tutorial, Simple Example, not from the JOP book",      "op/op-tutorial/op-tut-0/op-tut-0",   "fe_k"],
+	["				0a", "Coding tutorial, Simple Example extended",      				"op/op-tutorial/op-tut-0/op-tut-0a",  "fe_k"],
+	["				0b", "Coding tutorial, Simple Example with OOP and library code",   "op/op-tutorial/op-tut-0/op-tut-0b",  "fe_k"],
+	["				2", "Coding tutorial, Chapter 2, JavaScript Inheritance and Object Programming",      "op/op-tutorial/op-tut-2/op-tut-2",  "fe_k"],
+	["					A", "Coding tutorial, Chapter 2a, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-2/op-tut-2a", "fe_k"],
+	["					B", "Coding tutorial, Chapter 2b, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-2/op-tut-2b", "fe_k"],
+	["					C", "Coding tutorial, Chapter 2c, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-2/op-tut-2c", "fe_k"],
+	["					D", "Coding tutorial, Chapter 2d, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-2/op-tut-2d", "fe_k"],
+	["					E", "Coding tutorial, Chapter 2e, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-2/op-tut-2e", "fe_k"],
+	["					F", "Coding tutorial, Chapter 2e, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-2/op-tut-2f", "fe_k"],
+
+	["				3", "Coding tutorial, Chapter 3, JavaScript Inheritance and Object Programming",      "op/op-tutorial/op-tut-3/op-tut-3",  "fe_k"],
+	["					A", "Coding tutorial, Chapter 3a, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3a", "fe_k"],
+	["					B", "Coding tutorial, Chapter 3b, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3b", "fe_k"],
+	["					C", "Coding tutorial, Chapter 3c, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3c", "fe_k"],
+	["					D", "Coding tutorial, Chapter 3d, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3d", "fe_k"],
+	["					E", "Coding tutorial, Chapter 3e, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3e", "fe_k"],
+	["					F", "Coding tutorial, Chapter 3f, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3f", "fe_k"],
+	["					G", "Coding tutorial, Chapter 3g, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-3/op-tut-3g", "fe_k"],
+
+	["				4", "Coding tutorial, Chapter 4, JavaScript Inheritance and Object Programming",      "op/op-tutorial/op-tut-4/op-tut-4",  "fe_k"],
+	["					A", "Coding tutorial, Chapter 4a, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-4/op-tut-4a", "fe_k"],
+	["					B", "Coding tutorial, Chapter 4b, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-4/op-tut-4b", "fe_k"],
+	["					C", "Coding tutorial, Chapter 4c, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-4/op-tut-4c", "fe_k"],
+	["					D", "Coding tutorial, Chapter 4d, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-4/op-tut-4d", "fe_k"],
+	["					E", "Coding tutorial, Chapter 4e, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-4/op-tut-4e", "fe_k"],
+
+	["				5", "Coding tutorial, Chapter 5, JavaScript Inheritance and Object Programming",      "op/op-tutorial/op-tut-5/op-tut-5",  "fe_k"],
+	["					A", "Coding tutorial, Chapter 5a, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5a", "fe_k"],
+	["					B", "Coding tutorial, Chapter 5b, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5b", "fe_k"],
+	["					C", "Coding tutorial, Chapter 5c, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5c", "fe_k"],
+	["					D", "Coding tutorial, Chapter 5d, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5d", "fe_k"],
+	["					E", "Coding tutorial, Chapter 5e, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5e", "fe_k"],
+	["					F", "Coding tutorial, Chapter 5f, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5f", "fe_k"],
+	["					G", "Coding tutorial, Chapter 5g, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-5/op-tut-5g", "fe_k"],
+
+	["				6", "Coding tutorial, Chapter 6, JavaScript Inheritance and Object Programming",      "op/op-tutorial/op-tut-6/op-tut-6",  "fe_k"],
+	["					A", "Coding tutorial, Chapter 6a, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-6/op-tut-6a", "fe_k"],
+	["					B", "Coding tutorial, Chapter 6b, JavaScript Inheritance and Object Programming", "op/op-tutorial/op-tut-6/op-tut-6b", "fe_k"],
+
+	["			Using <i>JSWindows</i>", "User tutorial, <i>JSWindows</i>.", "op/jswindows/op-doc-user", "fe_k"],
+	["				1", "<I>JSWindows</i> Lesson 1.", "op/jswindows/doc-user/op-doc-user-1", "fe_k"],
+	["				2", "<I>JSWindows</i> Lesson 2.", "op/jswindows/doc-user/op-doc-user-2", "fe_k"],
+	["				3", "<I>JSWindows</i> Lesson 3.", "op/jswindows/doc-user/op-doc-user-3", "fe_k"],
+	["				4", "<I>JSWindows</i> Lesson 4.", "op/jswindows/doc-user/op-doc-user-4", "fe_k"],
+	["				5", "<I>JSWindows</i> Lesson 5.", "op/jswindows/doc-user/op-doc-user-5", "fe_k"],
+	["				6", "<I>JSWindows</i> Lesson 6.", "op/jswindows/doc-user/op-doc-user-6", "fe_k"],
+	["				7", "<I>JSWindows</i> Lesson 7.", "op/jswindows/doc-user/op-doc-user-7", "fe_k"],
+	["				8", "<I>JSWindows</i> Lesson 8.", "op/jswindows/doc-user/op-doc-user-8", "fe_k"],
+	["				9", "<I>JSWindows</i> Lesson 9.", "op/jswindows/doc-user/op-doc-user-9", "fe_k"],
+	["				10", "<I>JSWindows</i> Lesson 10.", "op/jswindows/doc-user/op-doc-user-10", "fe_k"],
+	["				11", "<I>JSWindows</i> Lesson 11.", "op/jswindows/doc-user/op-doc-user-11", "fe_k"],
+
+	["			<i>JSW</i> Examples", "Engineer's documentation, JSWindows system 'Using JSW' examples.", "op/jswindows/op-doc-coder", "fe_k"],
+	["				5", "<I>JSWindows</i> Lesson 5.", "op/jswindows/doc-coder/examples/op-doc-coder-5", "fe_k"],
+	["				6", "<I>JSWindows</i> Lesson 6.", "op/jswindows/doc-coder/examples/op-doc-coder-6", "fe_k"],
+	["				7", "<I>JSWindows</i> Lesson 7.", "op/jswindows/doc-coder/examples/op-doc-coder-7", "fe_k"],
+	["				8", "<I>JSWindows</i> Lesson 8.", "op/jswindows/doc-coder/examples/op-doc-coder-8", "fe_k"],
+	["				9", "<I>JSWindows</i> Lesson 9.", "op/jswindows/doc-coder/examples/op-doc-coder-9", "fe_k"],
+	["				10", "<I>JSWindows</i> Lesson 10.", "op/jswindows/doc-coder/examples/op-doc-coder-10", "fe_k"],
+	["				11", "<I>JSWindows</i> Lesson 11.", "op/jswindows/doc-coder/examples/op-doc-coder-11", "fe_k"],
+
+	["			<i>JSW</i> Doc", "A JavaScript Windowing system.", "op/jswindows/doc-coder/code/intro", "fe_k"],
+	["				<i>JSW</i> Classes", "The classes in the JSWindows system.", "op/jswindows/doc-coder/code/class-doc", "fe_k"],
+	["					Capability", "The capability classes in the JSWindows system.", "op/jswindows/doc-coder/code/capability-classes", "fe_k"],
+	["					Library", "The library classes in the JSWindows system.", "op/jswindows/doc-coder/code/library-classes", "fe_k"],
+	["						Borders", "The Borders class in the JSWindows system.", "op/jswindows/doc-coder/code/borders", "fe_k"],
+	["						Choices", "The Choices class in the JSWindows system.", "op/jswindows/doc-coder/code/choices", "fe_k"],
+	["						Drag_listener", "The Drag_listener class in the JSWindows system.", "op/jswindows/doc-coder/code/drag-listener", "fe_k"],
+	["						Pos_size", "The Pos_size class in the JSWindows system.", "op/jswindows/doc-coder/code/pos-size", "fe_k"],
+	["					Wobj", "The Wobj-based classes in the JSWindows system.", "op/jswindows/doc-coder/code/wobj-classes", "fe_k"],
+	["						Basics", "The basic Wobj-based classes in the JSWindows system.", "op/jswindows/doc-coder/code/wobj-classes-basic", "fe_k"],
+	["							Wobj", "The Wobj class in the JSWindows system.", "op/jswindows/doc-coder/code/wobj", "fe_k"],
+	["							Panel", "The Panel class in the JSWindows system.", "op/jswindows/doc-coder/code/panel", "fe_k"],
+	["							Rect", "The Rect class in the JSWindows system.", "op/jswindows/doc-coder/code/rect", "fe_k"],
+	["						Widgets", "The Wobj-based widget classes in the JSWindows system.", "op/jswindows/doc-coder/code/wobj-classes-widget", "fe_k"],
+	["							Buttons", "The Wobj-based button classes in the JSWindows system.", "op/jswindows/doc-coder/code/wobj-buttons", "fe_k"],
+	["								Button", "The Button class in the JSWindows system.", "op/jswindows/doc-coder/code/button", "fe_k"],
+	["								Close", "The Button_close class in the JSWindows system.", "op/jswindows/doc-coder/code/button-close", "fe_k"],
+	["								Btn_title", "The Btn_title class in the JSWindows system.", "op/jswindows/doc-coder/code/btn_title", "fe_k"],
+	["						Windows", "The window classes in the JSWindows system.", "op/jswindows/doc-coder/code/wobj-classes-windows", "fe_k"],
+	["							Window", "The Window class in the JSWindows system.", "op/jswindows/doc-coder/code/window", "fe_k"],
+	["							Minbox", "The Minbox class (the minimized windows box) in the JSWindows system.", "op/jswindows/doc-coder/code/minbox", "fe_k"],
+	["							Movable", "The Window_M class (Window w/draggable title) in the JSWindows system.", "op/jswindows/doc-coder/code/window-m", "fe_k"],
+	["							Button Sizable", "The Window_M_BS class (movable Window w/sizing buttons) in the JSWindows system.", "op/jswindows/doc-coder/code/window-m-bs", "fe_k"],
+	["				<i>JSW</i> Data", "The library data in the JSWindows system.", "op/jswindows/doc-coder/code/library-data", "fe_k"],
+	["				<i>JSW</i> Functions", "The library functions in the JSWindows system.", "op/jswindows/doc-coder/code/library-functions", "fe_k"],
+	["				<i>JSW</i> Objects", "The defined objects in the JSWindows system.", "op/jswindows/doc-coder/code/object-doc", "fe_k"],
+	["					Styles", "The 'styles' objects in the JSWindows system.", "op/jswindows/doc-coder/code/styles", "fe_k"],
+	["					Other", "The 'other; objects in the JSWindows system.", "op/jswindows/doc-coder/code/other", "fe_k"],
+
+	["			Source Code", "Source code for the JSWindows system (classical inheritance and object programming).",	"op/jswindows/source/op-source", "fe_k"],
+	["				code", "<code>jsw2-code.js</code> source code for the JSWindows system.", 							"op/jswindows/source/op-source-code", "fe_k"],
+	["				data", "<code>jsw2-data.js</code> source code for the JSWindows(ci) system.",						"op/jswindows/source/op-source-data", "fe_k"],
+	["				wobjs", "<code>jsw2-wobjs.js</code> source code for the JSWindows(op) system.",						"op/jswindows/source/op-source-wobjs", "fe_k"],
+	["				capabilities", "<code>jsw2-capabilities.js</code> source code for the JSWindows(op) system.",		"op/jswindows/source/op-source-capabilities", "fe_k"],
+
+	["			Corrections", "JOP errata page.",	"op/corrections", "fe_k"],
+
+	["	Other Pages", "Pages, mostly unpublished, not all geek.", "pages/pages", ""],
+	["		Disinflation", "Optimal purchasing under technological disinflation", "pages/disinflation", ""],
+	["		Genealogy", "Brief genealogy of programming languages.", "pages/genealogy-programming-languages", ""],
+	["		RDBMS Design", "A design method, proven to produce 5th-normal form designs.", "pages/db-design", ""],
+
+	["	Early&nbsp;Sites", "Early sites by Martin Rinehart.", "early-sites/early-sites", ""],
+	["		Java++", "Early Java (and other software) website.", "early-sites/mrwebsite_old/index", ""],
+	["		Cloud", "Cloud computing in political website.", "early-sites/cloud/index", ""],
+	["		RaqFit", "Racquet sports and health club website.", "early-sites/racquetfitness/index", ""],
+	["		SketchUp&nbsp;Tutorial", "Tutorial for using Google\'s 3D modeling software", "models/tutorial/index", ""],
+
+	["	Contact", "Getting in touch.", "contact", ""]
+]; // end: menu_data_arr[]
+
+/** */
+MRdata323.path_expansions = [
+	['fe_e_jx',		'frontend-engineering/engineers/javascript/xbrowser'],
+	['fe_e_j',		'frontend-engineering/engineers/javascript'],
+	['fe_e',		'frontend-engineering/engineers'],
+	['fe_k',		'frontend-engineering/knowits'],
+	['fe_a',		'frontend-engineering/artists'],
+	['fe',			'frontend-engineering']
+];
+
+/**I Getters */
+
+/* Four main structures are 'menu_data_arr' (the source array, above) and 'menu_data_arr_on' (above array with added outnums). An 'outnum' is an array of outline numbers. Section 1, subsection 2, detail 3 is outnum [1,2,3].) 'page_data' is an object, keyed by pathname, content: [outnum, topic, tooltip]. 'page_tree' is an object, keyed by comma-joined outnum, content: MenuTreeNode (see class constructor, below).
+
+'menu_data_arr_on' is created when this file is loaded. 'page_data' and 'page_tree' are instantiated on request via 'get_page_data()' and 'get_page_tree()'.
+
+The primary API, called by view to create site menus, is 'get_current_page_menu_data_list()'. This is an array of 'MenuData' objects in home thru current (top thru bottom) menu order.
+
+For the 'page turner' links, get_pcn_menu_data_arr_on() returns three rows from 'menu_data_arr_on': the previous, current and next pages' data.*/
+
+/**A During Initialization */
+
+	/** 'home' and 'page'
+	 'home' is the root (in office and online)
+	 'page' is the full name of the page after the root (not including "/") */
+	MRdata323.home_func = function () {
+	/* Returns the location through the first forward slash following, if present,
+	'MR23' (or the first slash, if no 'MR23').
+	This is correct on the website and on the office computers. */
+
+		var str = window.location.href; // the full location
+			str = MRdata323.strip_fragment_identifier( str );
+
+/* Tested: Chrome, Firefox, MSIE, Opera, Safari
+	local: prefix starts w/ 'file:', ends w/ 'MR23/'
+		P.S. Opera local ends w/ 'MR23//' (two trailing slashes)
+	remote: 				'http:',		 'com/' */
+
+		var start = str.substr( 0, 5 );
+		var end_loc, path, stop;
+		if ( start === 'file:' ) {
+			if ( str.toLowerCase().indexOf('mr23//') > -1 ) {
+					stop = 'mr23//'; } // Opera, local
+			else { stop = 'mr23/'; } // not Opera, local
+		}
+		if ( start === 'http:' ) { stop = '.com/'; }
+		if ( stop === undefined ) { throw "MRdata323.home_func(), "
+			"unknown page prefix in " + str; }
+
+		end_loc = str.toLowerCase().indexOf( stop ) + stop.length ;
+		MRdata323.home = str.substr( 0, end_loc );
+		MRdata323.page = str.substr( end_loc );
+		if ( MRdata323.page === '' ) { MRdata323.page = 'index.html'; }
+
+// alert( 'home_func(): ' + window.location.href + '\n\n' + MRdata323.home + '\n' + MRdata323.page );
+
+	} // end: home_func()
+
+/**A As Requested by View */
+
+/** Home -> current. */
+MRdata323.get_current_page_menu_data_list = function () {
+
+/*
+Initialize empty menu tree.
+Start with the page just loaded as the 'current_page'.
+
+Loop:
+	Enter the menu data (a MenuData object) for the current page.
+	Get the MenuData for the selected page's parent. (Parent and siblings.)
+	Enter this MenuData above (as item [0]) the other MenuData in list.
+	Until we back up to the menu root (parent key === '(n/a)')
+*/
+
+	var menu_tree = []; // array of MenuData objects
+	var menu_data = MRdata323.get_current_page_menu_data();
+	menu_tree[ 0 ] = menu_data;
+	var current_node = menu_data.selected_node();
+	if ( current_node.children.length > 0 ) {
+		menu_tree[ 1 ] = new MRdata323.MenuData( current_node.children, -1 );
+	}
+
+	while (  current_node.parent_key !== '(n/a)' ) {
+		menu_data = MRdata323.get_node_menu_data( current_node.parent );
+		menu_tree.unshift( menu_data );
+		current_node = menu_data.selected_node();
+	}
+
+	return menu_tree;
+
+} // end: get_current_page_menu_data_list()
+
+/** current -> end. */
+MRdata323.get_current_page_subtree_table = function () {
+
+	var outnum = MRdata323.get_current_page_row()[0];
+
+	var table = new MRlib323.Table( 'Table',
+			['outnums', 'topic', 'tooltip', 'name', 'path'],
+			MRdata323.menu_data_arr_on );
+
+		table = table.where( 'outnums asw [' + outnum + ']' );
+
+	return table;
+
+} // end: get_current_page_subtree_table()
+
+/** Object, one property per page row. */
+MRdata323.get_page_data = function () {
+
+	/* 'page_data' is an object. Its properties are:
+		name - path + '/' + name (see below)
+		value - [outline numbers, topic, tooltip]
+
+	note: name is contracted path plus filename w/o '.html'
+		see MRdata323.path_expansions for list of contractions */
+
+	if ( MRdata323.page_data !== undefined ) { return MRdata323.page_data; }
+
+	MRdata323.page_data = {};
+	for ( var i in MRdata323.menu_data_arr_on ) {
+		var row = MRdata323.menu_data_arr_on[ i ];
+		var path = row[ 4 ];
+		if ( path !== '' ) { path += '/'; }
+		MRdata323.page_data[ path + row[3] ] = row.slice( 0, 3 );
+	}
+
+	return MRdata323.page_data;
+
+} // end: get_page_data()
+
+/** Tree of page row objects. */
+MRdata323.get_page_tree = function () {
+	if ( MRdata323.page_tree !== undefined ) { return MRdata323.page_tree; }
+
+	var page_tree = {};
+	var list = MRdata323.get_page_data();
+
+	for ( var prop in list ) {
+
+		var list_row = list[ prop ]; // see get_page_data()
+		// [ outnums, pathname, topic, tooltip ]
+		var tree = new MRdata323.MenuTreeNode( list_row[ 0 ], prop,
+				list_row[ 1 ], list_row[ 2 ] );
+		page_tree[ tree.key ] = tree;
+
+		if ( tree.parent_key !== '(n/a)' ) {
+			var parent = page_tree[ tree.parent_key ];
+			parent.children.push( tree );
+			tree.parent = parent;
+		}
+
+	} // end: for prop in list
+
+	MRdata323.page_tree = page_tree;
+	return page_tree;
+
+} // end: get_page_tree()
+
+/** Prev, cur, next rows. */
+MRdata323.get_pcn_menu_data_arr_on = function () {
+
+	var arr = MRdata323.menu_data_arr_on,
+		cp = MRdata323.page;
+
+	cp = MRdata323.contract_path( cp );
+	cp = cp.replace( '.html', '' );
+
+	for ( var i in arr ) {
+		var row = arr[ i ];
+		var path = ( row[4] !== '' ) ? ( row[4] + '/' ) : ''
+		if ( cp === (path + row[ 3 ]) ) { return pcn( arr, +i ); }
+	}
+	throw "No data in MRdata323.menu_data_arr_on for " + MRdata323.page;
+
+	function pcn( arr, i ) { // pcn === previous, current, next
+
+		var prv, cur, nxt;
+		prv = i > 0 ? arr[ i - 1 ] : undefined;
+		cur = arr[ i ];
+		nxt = ( i < (arr.length - 1) ) ? arr[ i + 1 ] : undefined;
+		return [ prv, cur, nxt ];
+
+	} // end: pcn()
+
+} // end: find_current_page_menu_data_arr_on()
+
+/**A Private (non-API) Getters */
+
+/** Menu (page w/siblings). */
+MRdata323.get_current_page_menu_data = function () {
+	var node = MRdata323.get_current_page_tree_node();
+	return MRdata323.get_node_menu_data( node );
+}
+
+/** One row for the current page.
+Returns a row in 'page_data': [ [outnums], topic, tooltip ] */
+MRdata323.get_current_page_row = function () {
+	var page = MRdata323.page;
+		if ( page[0] === '/' ) { page = page.substr( 1 ); }
+		page = page.replace( '.html', '' );
+		page = MRdata323.contract_path( page );
+	var data = MRdata323.get_page_data()[ page ];
+	if ( data === undefined ) { throw "In 'get_current_page_row()', no data for " + page; }
+	return data;
+}
+
+/** Node in menu data tree. */
+MRdata323.get_current_page_tree_node = function () {
+
+	var data_row = MRdata323.get_current_page_row();
+	var outnums = data_row[ 0 ];
+	var tree = MRdata323.get_page_tree();
+
+	var key = ( outnums.length === 0 ) ? '0' : outnums.join( ',' );
+	return tree[ key ];
+
+} // */end: get_current_page_tree_node()
+
+/** Menu data (node + siblings ). */
+MRdata323.get_node_menu_data = function ( node ) {
+	// done quickly if this is the root node:
+	if ( !node.parent ) { return new MRdata323.MenuData( [node], 0 ); }
+
+	var parent = node.parent;
+	var nodes = parent.children;
+	var sel = find( nodes, node );
+	return new MRdata323.MenuData( nodes, sel );
+
+	function find( nodes, target ) {
+		for ( var i in nodes ) {
+			if ( nodes[i] === target ) { return +i; }
+		}
+		return -1;
+	} // end: find()
+
+} // end: get_current_page_menu_data()
+
+/**I Utilities */
+
+/** Full paths abbreviated. */
+MRdata323.contract_path = function ( full_path ) {
+
+	var expansions = MRdata323.path_expansions,
+		ret;
+	for ( var i in expansions ) {
+		ret = full_path.replace( expansions[ i ][ 1 ], expansions[ i ][ 0 ] );
+		if ( ret !== full_path ) { break; }
+	}
+
+	return ret;
+} // end: contract_path()
+
+/** Abbreviations spelled out. */
+MRdata323.expand_path = function ( abbrev ) {
+
+	var expansions = MRdata323.path_expansions,
+		ret;
+	for ( var i in expansions ) {
+		ret = abbrev.replace( expansions[ i ][ 0 ], expansions[ i ][ 1 ] );
+		if ( ret !== abbrev ) { break; }
+	}
+
+	return ret;
+} // end: expand_path()
+
+/** Load new page. */
+MRdata323.go2 = function ( pathname ) {
+	pathname = MRdata323.home +
+			MRdata323.expand_path( pathname ) + '.html'
+	window.location.href = pathname;
+} // end: go2()
+
+/** Remove frag id from URL */
+MRdata323.strip_fragment_identifier = function (full_pathname) {
+
+	// full pathname may be a URL object (from window.location)
+	// and may include #frag_id ("../hither/yon/xxx.html#fragment_id")
+
+	/* 	(			start, $1
+			[^#]		any character except '#'
+			+			1 or more (non '#' chars)
+		)			end, $1
+		(			start, $2
+			#			the '#' character
+			.*			zero or more, any character
+		)			end, $2
+	*/
+	var has_frag_id = ('' + full_pathname).match(  /([^#]+)(#.*)/  );
+	// true if there is a '#'
+		// $1: all chars before the first (optional) '#'
+		// $2: the first (optional) '#' and all following chars
+
+	return has_frag_id ? RegExp.$1 : full_pathname;
+}
+
+/**I Classes */
+
+/**A MenuTreeNode */
+
+/** */
+MRdata323.MenuTreeNode = function ( outnums, pathname, topic, tooltip ) {
+	this.outnums = outnums;
+	this.pathname = pathname;
+	this.topic = topic;
+	this.tooltip = tooltip;
+	this.key = make_key( this.outnums );
+	this.parent_key = make_parent_key( this.outnums );
+	this.parent = null;
+	this.children = [];
+
+	function make_key( outnums ) {
+		if ( outnums.length === 0 ) { return '0'; }
+		return outnums.join( ',' );
+	}
+
+	function make_parent_key( outnums ) {
+		if ( outnums.length === 0 ) { return '(n/a)'; }
+		if ( outnums.length === 1 ) { return '0'; }
+		return outnums.slice( 0, outnums.length - 1 ).join( ',' );
+	} // end: make_parent_key()
+
+} // end: MenuTreeNode()
+
+/** */
+MRdata323.MenuTreeNode.prototype.toString = function () {
+	return 'MenuTreeNode{' +
+		'outnums=' + this.outnums +
+		',pathname=' + this.pathname +
+		',topic=' + this.topic +
+		',tooltip=' + this.tooltip +
+		',key=' + this.key +
+		',parent_key=' + this.parent_key +
+		',# of children=' + this.children.length + '}';
+} // end: MenuTreeNode.toString()
+
+/**A MenuData */
+
+/** */
+MRdata323.MenuData = function ( menu_tree_nodes, index_selected ) {
+	if ( index_selected === undefined ) { index_selected = -1; }
+	this.menu_tree_nodes = menu_tree_nodes;
+	this.selected = index_selected;
+}
+
+/** */
+MRdata323.MenuData.prototype.selected_node = function () {
+		return this.menu_tree_nodes[ this.selected ]; }
+
+/** */
+MRdata323.MenuData.prototype.toString = function () {
+	var ret = 'MenuData{';
+		ret += 'selected=' + this.selected;
+	for ( var i in this.menu_tree_nodes ) {
+			ret += ',\r\n' + this.menu_tree_nodes[ i ]; }
+	ret += '}';
+	return ret;
+} // end: MenuData.toString()
+
+/**I Page Turners */
+
+/**A Page Turner Data */
+
+/** Styles, Both */
+MRdata323.turner_styles = {
+	background:		'#f8f4f0',
+	border:			'5px solid #d8d4d0',
+	borderRadius:	'10px',
+	fontSize:		'10pt',
+	fontWeight:		'bold',
+	height:			'20px',
+	lineHeight:		'20px',
+	opacity:		'0.5',
+	paddingLeft:	'1px',
+	position:		'fixed',
+	width:			'35px',
+	zIndex:			99
+}
+
+MRdata323.turner_styles_prev = {
+	bottom:			'10px',
+	left:			'10px'
+}
+
+MRdata323.turner_styles_next = {
+	bottom:			'10px',
+	right:			'10px'
+}
+
+/**A Code */ // Note: standalone code, no MRlib support
+MRdata323.show_turners = function () {
+
+	// get prev, current, next data arrays
+	var pcn = MRdata323.get_pcn_menu_data_arr_on();
+
+	// construct page URLs from [... filename, abbreviated path]
+	var prev_page = undefined;
+	if ( pcn[0] !== undefined ) {
+		prev_page = fixup_url( pcn[0] );
+	}
+	var next_page = undefined;
+	if ( pcn[2] !== undefined ) {
+		next_page = fixup_url( pcn[2] );
+	}
+
+	var prev = make_turner( MRdata323.turner_styles_prev );
+		prev.innerHTML = make_link( prev_page, 'PREV' );
+	var next = make_turner( MRdata323.turner_styles_next );
+		next.innerHTML = make_link( next_page, 'NEXT' );
+
+	function fixup_url( arr_on_row ) { // data w/outnums
+
+		var ret = arr_on_row[ 3 ]; // partial pathname
+		if ( arr_on_row[4] !== '' ) {
+			var path = MRdata323.expand_path( arr_on_row[4] );
+			ret = path + '/' + ret;
+		}
+		return MRdata323.home + ret + '.html';
+
+	} // end: fixup_url()
+
+	function make_link( url, label ) { // use HTML
+		if ( url !== undefined ) {
+			return '<a href="' + url + '" style="text-decoration: none">' +
+					label + '</a>';
+		}
+		return '';
+	}
+
+	function make_turner( styles ) {
+		var ret = document.createElement( 'div' );
+		style( ret, MRdata323.turner_styles ); // styles for both
+		style( ret, styles ); // styles for 'prev' or 'next'
+		document.body.appendChild( ret );
+		return ret;
+	}
+
+	function style( elem, styles ) {
+		for ( var prop in styles ) { elem.style[ prop ] = styles[ prop ]; }
+	}
+
+} // end: show_turners()
+
+/**I MRdata323 Initialization */
+
+/**A Root (xxx.home) and Current Page (xxx.page) */
+MRdata323.home_func(); // look up root, current page pathname
+
+/**A Outline Numbers (xxx.menu_data_arr_on) */
+MRdata323.menu_data_arr_on = MRlib323.outnum( MRdata323.menu_data_arr );
+/* Data with added outline numbers. Columns are:
+	0 - array of outline numbers
+	1 - topic, leading tabs stripped
+	2 - tooltip
+	3, 4 - page name, path (as above ) */
+
+MRdata323.show_turners();
+
+// console.log( 'mr-data323.js loaded' );
+
+/* end mr-data323.js */
